@@ -17,7 +17,8 @@ function makeAgent(manual, sec, idx, entryP){
     curStart:entryP, curLen:1, slot:null, rate:1, glass:null,
     pace:Math.exp(0.45*(Math.random() + Math.random() + Math.random() - 1.5)*2)};   // some players linger, some press on (about ×0.5–×2 dwell)
 }
-function setMinReps(a){ const P = E.gen.get(a.idx); const k = E.excite ? 0.45 + 1.1*P.ex : 1; a.minReps = Math.max(1, Math.round((a.pace || 1)*k*PPE*(50 + Math.random()*70)/P.len)); }
+const STAY = {sec:60};   // average seconds on a pattern (set by the 'Stay per pattern' slider)
+function setMinReps(a){ const P = E.gen.get(a.idx); const k = E.excite ? 0.45 + 1.1*P.ex : 1; a.minReps = Math.max(1, Math.round((a.pace || 1)*k*(STAY.sec/E.period)*(0.6 + 0.8*Math.random())/P.len)); }
 function active(){ return E.agents.filter(a => a.mode !== 'out' && !a.removed); }
 function stats(){
   const act = active(); const ix = act.map(x => x.idx).sort((x,y) => x-y);
@@ -227,7 +228,7 @@ function fixEnsemble(list){
     if (list.includes(s.sec)){
       s.userOff = false; s.fixed = true;
       if (a){ a.manual = true; a.leaseEnd = Infinity; if (!a.userLeave) a.leaving = false; }
-      else if (s.waitUntil === null){ s.manual = true; s.waitUntil = E.clock + (k++ === 0 ? 0.2 : 2 + 4*k*Math.random()); }
+      else if (s.waitUntil === null){ s.manual = true; s.waitUntil = Math.max(E.clock, E.openUntil || 0) + (k++ === 0 ? 0.2 : 2 + 4*k*Math.random()); }
     } else {
       s.fixed = false;
       if (a){ if (a.mode === 'out') a.removed = true; else a.leaving = true; }
@@ -270,6 +271,7 @@ function toggleSlot(s){
 function canJoin(){
   const G = E.gather;
   if (G && G.climax) return false;
+  if (E.clock < (E.openUntil || 0)) return false;   // the opening: pulse alone
   if (E.agents.some(x => x.mode === 'out' && !x.removed) && active().length === 1) return false;   // the solo
   return true;
 }
@@ -334,10 +336,11 @@ function pulse(t){
   gatherTick(p);
   dynamicsStep();
   technoPulse(p, t);
-  const pulseFade = 1 - smooth(0.3, 0.45, TECHNO.X);   // the hats take over from the pulse
+  const opening = E.clock < (E.openUntil || 0);
+  const pulseFade = opening ? 1 : 1 - smooth(0.3, 0.45, TECHNO.X);   // the hats take over from the pulse
   if (E.audio && ctx && E.pulseLevel > 0 && pulseFade > 0.01 && p % PPE === 0){   // the pulse stays in eighth notes
     const S = stats();
-    if (S.act.some(x => !x.resting)){ const m = pulsePitch(S); if (m !== null) voice({synth:'pulse'}, m, t, E.period*PPE*0.5, 0.13*SYNTH_GAIN.pulse*0.55*pulseFade*Math.pow(E.pulseLevel/0.5, 1.5), 1, music); }   // pulse level: 50% is the original; 100% about +4.5 dB
+    if (opening || S.act.some(x => !x.resting)){ const m = opening ? 84 : pulsePitch(S); if (m !== null) voice({synth:'pulse'}, m, t, E.period*PPE*0.5, 0.13*SYNTH_GAIN.pulse*0.55*pulseFade*Math.pow(E.pulseLevel/0.5, 1.5), 1, music); }   // pulse level: 50% is the original; 100% about +4.5 dB
   }
   for (const a of E.agents.slice()){
     if (a.removed) continue;
@@ -384,9 +387,11 @@ function reset(){
   E.agents = []; E.lastT = 0; E.cycles = 0; E.log = []; E.flags = {}; E.joinCooldown = E.clock + 8; E.gather = null; E.phase = null; E.phaseQuietUntil = 0; initForm(); initTechno();
   E.gen.useEx = E.excite; E.gen.mode = E.genMode || 'v2'; E.traffic = 0.5;
   initSlots(); initTuning();
+  E.openUntil = E.clock + 12;   // the pulse plays alone for 12 s while the instrument samples load
+  log('The pulse alone while the instruments load');
   if (FIXED){ fixEnsemble(FIXED); log(`Started (seed ${E.seedNum}, ${E.seeds.length} seed patterns)`); return; }
   const pool = E.slots.slice(), first = [];
   for (let k=0; k<=E.minN && pool.length; k++){ const s = pickByRole(pool, first); pool.splice(pool.indexOf(s), 1); first.push(s); }
-  first.forEach((s, k) => { s.waitUntil = E.clock + (k === 0 ? 0.2 : k < E.minN ? 4 + Math.random()*30 : 15 + Math.random()*20); });
+  first.forEach((s, k) => { s.waitUntil = E.openUntil + (k === 0 ? 0.2 : k < E.minN ? 4 + Math.random()*30 : 15 + Math.random()*20); });
   log(`Started (seed ${E.seedNum}, ${E.seeds.length} seed patterns)`);
 }

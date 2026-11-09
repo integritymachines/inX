@@ -31,8 +31,18 @@ function onStyleApplied(){
 }
 const bindRange = (id, fn) => { const el = $(id); const upd = () => fn(+el.value); el.addEventListener('input', upd); upd(); };
 $('#excite').addEventListener('change', e => { E.excite = e.target.checked; if (E.gen) E.gen.useEx = E.excite; });
-bindRange('#minn', v => { E.minN = v; $('#minn-o').textContent = v; if (+$('#maxn').value < v) setRange('#maxn', v); });
-bindRange('#maxn', v => { markCustom(); E.maxN = v; $('#maxn-o').textContent = v; if (+$('#minn').value > v) setRange('#minn', v); });
+function syncPlayers(){
+  const a = +$('#minn').value, b = +$('#maxn').value;
+  $('#players-o').textContent = `${a}–${b}`;
+  $('#dfill').style.left = `${100*(a - 1)/23}%`; $('#dfill').style.right = `${100*(24 - b)/23}%`;
+  $('#minn').style.zIndex = a > 20 ? 2 : 1;   // keep the lower thumb reachable when both sit at the top
+}
+bindRange('#minn', v => { if (v > 12){ v = 12; $('#minn').value = 12; } E.minN = v; if (+$('#maxn').value < v){ $('#maxn').value = v; E.maxN = v; } syncPlayers(); });
+bindRange('#maxn', v => { markCustom(); if (v < 2){ v = 2; $('#maxn').value = 2; } E.maxN = v; if (+$('#minn').value > v){ $('#minn').value = v; E.minN = v; } syncPlayers(); });
+/* Stay per pattern: average time a player spends on a pattern before moving on, 5 s to 2 min on a log scale.
+   A live In C runs its 53 patterns in about an hour: roughly a minute each. */
+const stayOf = v => Math.round(5*Math.pow(24, v/100));
+bindRange('#stay', v => { STAY.sec = stayOf(v); $('#stay-o').textContent = STAY.sec >= 60 ? `${(STAY.sec/60).toFixed(STAY.sec % 60 ? 1 : 0)} min` : `${STAY.sec} s`; markCustom(); });
 let tempoMode = null;
 function syncTempo(){
   const club = TECHNO.X >= 0.25, el = $('#tempo');
@@ -75,7 +85,7 @@ presetSel.addEventListener('change', () => { if (presetSel.value !== 'custom'){ 
 function onPresetApplied(P){
   presetQuiet = true;
   setRange('#techno', Math.round(P.X*100)); syncTempo();
-  setRange('#maxn', P.maxN); setRange('#minn', P.minN ?? 2); setRange('#gap', P.gap ?? 30); setRange('#pulse', Math.round(100*(P.pulse ?? 0.5)));
+  setRange('#maxn', P.maxN); setRange('#minn', P.minN ?? 2); setRange('#stay', Math.round(100*Math.log((P.stay ?? 20)/5)/Math.log(24))); setRange('#gap', P.gap ?? 30); setRange('#pulse', Math.round(100*(P.pulse ?? 0.5)));
   setRange('#terry', P.terry ?? 3); setRange('#philip', Math.round((P.philip ?? 0.5)*100)); setRange('#steve', Math.round((P.steve ?? 0.5)*100));
   if (P.john !== undefined) setRange('#john', Math.round(P.john*100));
   if (P.drone !== undefined) setRange('#lamonte', Math.round(P.drone*100));

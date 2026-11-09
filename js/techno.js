@@ -141,6 +141,7 @@ function technoPulse(p, t){
   const target = technoPeriod();
   E.period += (target - E.period)*0.03;
   if (Math.abs(target - E.period) < 1e-4) E.period = target;
+  if (E.clock < (E.openUntil || 0)) return;   // the opening: pulse alone, no drums yet
   const step = mod(p, BAR);
   if (step === 0 && p !== TECHNO.lastBar){
     TECHNO.lastBar = p;

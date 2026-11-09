@@ -11,40 +11,40 @@ const STEADY_PLAYERS = ['bass','cellos','piano1','violins','flute','clarinet','m
 const DRIVE_PLAYERS = ['bass','cellos','timpani','piano1','piano2','violins','trumpet','sax','flute','clarinet','marimba','xylo','handperc','harp'];
 const MODE = Object.assign({}, MODE_DEFAULT);
 const PRESETS = {
-  productive: {label:'Productive (ADHD)',       X:0.6, bpm:115, composers:[], terry:2, pulse:0.5, players:STEADY_PLAYERS, maxN:8, minN:3, gap:80, wet:0.2, john:0.5, drone:0.5, evo:0.15,
+  productive: {label:'Productive (ADHD)', stay:45,       X:0.6, bpm:115, composers:[], terry:2, pulse:0.5, players:STEADY_PLAYERS, maxN:8, minN:3, gap:80, wet:0.2, john:0.5, drone:0.5, evo:0.15,
              mode:{peakDb:2, surprise:0.15, gridAll:true, flatten:0.8},
              kit:{kickDecay:0.32, kickPitch:[165, 50], hatDecay:0.03, openDecay:0.18, clap:'rim', bass:'sub', swing:0, pump:0.25, hatK:[8, 12], percK:[3, 5], elec:0.5, gains:{perc:0.8, ohat:0.7}}},
-  creative: {label:'Creative (ADHD)',    X:0,   pulseMs:400, composers:['reich','glass','adams','young'], terry:7, pulse:0.2, philip:0.7, steve:0.7, maxN:16, minN:2, gap:12, wet:0.36, john:0.9, drone:0.45, evo:0.5,
+  creative: {label:'Creative (ADHD)', stay:30,    X:0,   pulseMs:400, composers:['reich','glass','adams','young'], terry:7, pulse:0.2, philip:0.7, steve:0.7, maxN:16, minN:2, gap:12, wet:0.36, john:0.9, drone:0.45, evo:0.5,
              mode:{peakDb:8, surprise:0.85, gridAll:false, flatten:0}},
-  focus:    {label:'Focus (ADHD)', X:0.9, bpm:128, composers:['adams'], terry:3, pulse:0.5, players:DRIVE_PLAYERS, maxN:14, minN:3, gap:10, wet:0.22, john:0.9, drone:0.5, evo:0.6,
+  focus:    {label:'Focus (ADHD)', stay:25, X:0.9, bpm:128, composers:['adams'], terry:3, pulse:0.5, players:DRIVE_PLAYERS, maxN:14, minN:3, gap:10, wet:0.22, john:0.9, drone:0.5, evo:0.6,
              mode:{peakDb:8, surprise:0.4, gridAll:false, flatten:0}, ramp:{to:'productive', sec:600},
              kit:{kickDecay:0.42, kickPitch:[155, 48], hatDecay:0.045, openDecay:0.28, clap:'clap', bass:'sub', swing:0, pump:0.55, hatK:[10, 16], percK:[3, 7], elec:1, gains:{}}},
-  inc:      {label:'In C (orchestra)', X:0,    pulseMs:200, composers:[],                  maxN:12, wet:0.28, john:0.7, drone:0.5, evo:0.5},
-  minimal:  {label:'Minimal',          X:0.75, bpm:125, composers:['reich','glass'],       philip:0.6, steve:0.7, maxN:10, wet:0.22, john:0.6, drone:0.4, evo:0.6,
+  inc:      {label:'In C (orchestra)', stay:60, X:0,    pulseMs:200, composers:[],                  maxN:12, wet:0.28, john:0.7, drone:0.5, evo:0.5},
+  minimal:  {label:'Minimal', stay:30,          X:0.75, bpm:125, composers:['reich','glass'],       philip:0.6, steve:0.7, maxN:10, wet:0.22, john:0.6, drone:0.4, evo:0.6,
              kit:{kickDecay:0.3, kickPitch:[175, 52], hatDecay:0.028, openDecay:0.16, clap:'rim', bass:'sub', swing:0.06, pump:0.3, hatK:[7, 11], percK:[5, 7], elec:0.6, gains:{hat:0.8, perc:1.3, ohat:0.7}}},
-  berghain: {label:'Berghain', players:['tuba', 'trombone', 'bassoon', 'cellos', 'organ', 'horn', 'viola', 'timpani'],         X:1,    bpm:136, composers:['adams','young'],       maxN:8, wet:0.32, john:0.8, drone:0.8, evo:0.4,
+  berghain: {label:'Berghain', stay:30, players:['tuba', 'trombone', 'bassoon', 'cellos', 'organ', 'horn', 'viola', 'timpani'],         X:1,    bpm:136, composers:['adams','young'],       maxN:8, wet:0.32, john:0.8, drone:0.8, evo:0.4,
              kit:{kickDecay:0.62, kickPitch:[140, 43], hatDecay:0.035, openDecay:0.22, clap:'none', bass:'rumble', swing:0, pump:0.55, hatK:[8, 16], percK:[3, 5], elec:1, gains:{clap:0, ohat:0.8, kick:1.1}}},
-  panorama: {label:'Panorama Bar', players:['bass', 'piano1', 'piano2', 'organ', 'violins', 'sax', 'trumpet', 'marimba', 'harp', 'handperc'],     X:0.85, bpm:124, composers:['glass','adams'],       maxN:10, wet:0.25, john:0.6, drone:0.5, evo:0.5,
+  panorama: {label:'Panorama Bar', stay:25, players:['bass', 'piano1', 'piano2', 'organ', 'violins', 'sax', 'trumpet', 'marimba', 'harp', 'handperc'],     X:0.85, bpm:124, composers:['glass','adams'],       maxN:10, wet:0.25, john:0.6, drone:0.5, evo:0.5,
              kit:{kickDecay:0.35, kickPitch:[160, 50], hatDecay:0.04, openDecay:0.3, clap:'clap', bass:'house', swing:0.16, pump:0.45, hatK:[12, 16], percK:[4, 6], elec:0.5, gains:{ohat:1.3}}},
-  renate:   {label:'Wilde Renate', players:['bass', 'piano1', 'guitar', 'clarinet', 'flute', 'piccolo', 'marimba', 'xylo', 'glock', 'handperc'],     X:0.7,  bpm:122, composers:['reich','glass','young'], steve:0.6, maxN:10, wet:0.3, john:0.7, drone:0.35, evo:0.7,
+  renate:   {label:'Wilde Renate', stay:25, players:['bass', 'piano1', 'guitar', 'clarinet', 'flute', 'piccolo', 'marimba', 'xylo', 'glock', 'handperc'],     X:0.7,  bpm:122, composers:['reich','glass','young'], steve:0.6, maxN:10, wet:0.3, john:0.7, drone:0.35, evo:0.7,
              kit:{kickDecay:0.3, kickPitch:[180, 55], hatDecay:0.03, openDecay:0.2, clap:'rim', bass:'sub', swing:0.12, pump:0.3, hatK:[6, 12], percK:[5, 9], elec:0.25, gains:{perc:1.4}}},
-  tresor:   {label:'Tresor', players:['tuba', 'trombone', 'bass', 'cellos', 'timpani', 'organ', 'horn', 'xylo'],           X:1,    bpm:134, composers:['adams','reich'],       steve:0.6, maxN:8, wet:0.36, john:0.8, drone:0.5, evo:0.3,
+  tresor:   {label:'Tresor', stay:30, players:['tuba', 'trombone', 'bass', 'cellos', 'timpani', 'organ', 'horn', 'xylo'],           X:1,    bpm:134, composers:['adams','reich'],       steve:0.6, maxN:8, wet:0.36, john:0.8, drone:0.5, evo:0.3,
              kit:{kickDecay:0.55, kickPitch:[150, 45], hatDecay:0.03, openDecay:0.2, clap:'none', bass:'rumble', swing:0, pump:0.6, hatK:[12, 16], percK:[5, 7], elec:1, gains:{clap:0, perc:1.2, kick:1.15, ohat:0.7}}},
-  kitkat:   {label:'KitKat', players:['bass', 'trombone', 'piano1', 'organ', 'violins', 'sax', 'trumpet', 'flute', 'piccolo', 'glock', 'xylo', 'handperc'],           X:1,    bpm:138, composers:['adams'],               maxN:12, wet:0.24, john:1, drone:0.5, evo:0.6,
+  kitkat:   {label:'KitKat', stay:20, players:['bass', 'trombone', 'piano1', 'organ', 'violins', 'sax', 'trumpet', 'flute', 'piccolo', 'glock', 'xylo', 'handperc'],           X:1,    bpm:138, composers:['adams'],               maxN:12, wet:0.24, john:1, drone:0.5, evo:0.6,
              kit:{kickDecay:0.4, kickPitch:[165, 50], hatDecay:0.04, openDecay:0.3, clap:'clap', bass:'acid', swing:0, pump:0.65, hatK:[12, 16], percK:[3, 5], elec:1, gains:{ohat:1.1, bass:0.6}}},
-  katerblau:{label:'Kater Blau', players:['bass', 'cellos', 'bassoon', 'piano2', 'guitar', 'violins', 'viola', 'sax', 'flute', 'clarinet', 'oboe', 'horn', 'harp', 'marimba', 'glock', 'handperc'],       X:0.7,  bpm:120, composers:['glass','reich'],       philip:0.7, steve:0.5, maxN:16, wet:0.3, john:0.6, drone:0.5, evo:0.7,
+  katerblau:{label:'Kater Blau', stay:25, players:['bass', 'cellos', 'bassoon', 'piano2', 'guitar', 'violins', 'viola', 'sax', 'flute', 'clarinet', 'oboe', 'horn', 'harp', 'marimba', 'glock', 'handperc'],       X:0.7,  bpm:120, composers:['glass','reich'],       philip:0.7, steve:0.5, maxN:16, wet:0.3, john:0.6, drone:0.5, evo:0.7,
              kit:{kickDecay:0.32, kickPitch:[170, 52], hatDecay:0.035, openDecay:0.3, clap:'clap', bass:'house', swing:0.2, pump:0.35, hatK:[9, 13], percK:[5, 9], elec:0.3, gains:{perc:1.4, ohat:1.1}}},
-  visionaere:{label:'Club der Visionäre', players:['bass', 'piano1', 'guitar', 'viola', 'clarinet', 'flute', 'harp', 'marimba', 'glock', 'handperc'], X:0.75, bpm:123, composers:['reich'],          steve:0.7, maxN:10, wet:0.2, john:0.5, drone:0.5, evo:0.6,
+  visionaere:{label:'Club der Visionäre', stay:30, players:['bass', 'piano1', 'guitar', 'viola', 'clarinet', 'flute', 'harp', 'marimba', 'glock', 'handperc'], X:0.75, bpm:123, composers:['reich'],          steve:0.7, maxN:10, wet:0.2, john:0.5, drone:0.5, evo:0.6,
              kit:{kickDecay:0.28, kickPitch:[180, 54], hatDecay:0.025, openDecay:0.15, clap:'rim', bass:'sub', swing:0.1, pump:0.25, hatK:[5, 9], percK:[7, 11], elec:0.5, gains:{perc:1.1, hat:0.7, ohat:0.6}}},
-  sisyphos: {label:'Sisyphos', players:['bass', 'cellos', 'piano1', 'guitar', 'violins', 'viola', 'sax', 'trumpet', 'horn', 'flute', 'oboe', 'harp', 'marimba', 'handperc'],         X:0.8,  bpm:125, composers:['glass','adams'],       philip:0.6, maxN:14, wet:0.28, john:0.8, drone:0.5, evo:0.7,
+  sisyphos: {label:'Sisyphos', stay:25, players:['bass', 'cellos', 'piano1', 'guitar', 'violins', 'viola', 'sax', 'trumpet', 'horn', 'flute', 'oboe', 'harp', 'marimba', 'handperc'],         X:0.8,  bpm:125, composers:['glass','adams'],       philip:0.6, maxN:14, wet:0.28, john:0.8, drone:0.5, evo:0.7,
              kit:{kickDecay:0.38, kickPitch:[160, 50], hatDecay:0.04, openDecay:0.3, clap:'clap', bass:'house', swing:0.12, pump:0.45, hatK:[10, 14], percK:[5, 9], elec:0.5, gains:{perc:1.2, ohat:1.1}}},
-  techno:   {label:'Techno',           X:1,    bpm:130, composers:['adams'],               maxN:12, wet:0.18, john:0.7, drone:0.5, evo:0.5,
+  techno:   {label:'Techno', stay:25,           X:1,    bpm:130, composers:['adams'],               maxN:12, wet:0.18, john:0.7, drone:0.5, evo:0.5,
              kit:{kickDecay:0.42, kickPitch:[155, 48], hatDecay:0.045, openDecay:0.28, clap:'clap', bass:'sub', swing:0, pump:0.6, hatK:[10, 16], percK:[3, 7], elec:1, gains:{}}},
-  acid:     {label:'Acid',             X:1,    bpm:132, composers:['adams'],               maxN:10, wet:0.2, john:0.9, drone:0.5, evo:0.7,
+  acid:     {label:'Acid', stay:20,             X:1,    bpm:132, composers:['adams'],               maxN:10, wet:0.2, john:0.9, drone:0.5, evo:0.7,
              kit:{kickDecay:0.38, kickPitch:[160, 50], hatDecay:0.04, openDecay:0.25, clap:'clap', bass:'acid', swing:0.04, pump:0.5, hatK:[10, 16], percK:[3, 5], elec:1, gains:{bass:0.9, perc:0.7}}},
-  house:    {label:'House',            X:0.8,  bpm:122, composers:['glass'],               maxN:16, wet:0.24, john:0.7, drone:0.5, evo:0.5,
+  house:    {label:'House', stay:25,            X:0.8,  bpm:122, composers:['glass'],               maxN:16, wet:0.24, john:0.7, drone:0.5, evo:0.5,
              kit:{kickDecay:0.33, kickPitch:[165, 52], hatDecay:0.04, openDecay:0.32, clap:'clap', bass:'house', swing:0.18, pump:0.4, hatK:[8, 12], percK:[4, 6], elec:0.4, gains:{ohat:1.4}}},
-  chillwave:{label:'Chillwave',        X:0.65, bpm:92,  composers:['adams','young'],       maxN:10, wet:0.5, john:0.9, drone:0.6, evo:0.3,
+  chillwave:{label:'Chillwave', stay:40,        X:0.65, bpm:92,  composers:['adams','young'],       maxN:10, wet:0.5, john:0.9, drone:0.6, evo:0.3,
              kit:{kickDecay:0.45, kickPitch:[120, 45], hatDecay:0.05, openDecay:0.35, clap:'snare', bass:'sub', swing:0.1, pump:0.35, halftime:true, hatK:[6, 9], percK:[3, 4], elec:0.6, gains:{hat:0.7, perc:0.6, kick:0.85}}}
 };
 let PRESET_KEY = 'inc';
@@ -82,6 +82,7 @@ function rampTick(){
   setRange('#john', Math.round(100*L(A.john, k < 1 ? 0 : B.john)));
   setRange('#gap', 2*Math.round(L(A.gap, B.gap)/2));
   setRange('#maxn', Math.round(L(A.maxN, B.maxN)));
+  setRange('#stay', Math.round(100*Math.log(L(A.stay, B.stay)/5)/Math.log(24)));
   setRange('#evo', Math.round(100*L(A.evo, B.evo)));
   for (const f of ['peakDb', 'surprise', 'flatten']) MODE[f] = L(A.mode[f], B.mode[f]);
   if (TECHNO.kit && B.kit) for (const f of ['pump', 'kickDecay', 'hatDecay', 'elec']) TECHNO.kit[f] = L(A.kit[f], B.kit[f]);
