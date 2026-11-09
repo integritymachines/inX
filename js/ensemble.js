@@ -286,6 +286,11 @@ function spawnInto(s){
   log(`${name(a)} joins on pattern ${a.idx}${a.userSet ? ' (you)' : ''}`);
 }
 function manageSlots(){
+  // the opening lasts at least 12 s and until the samples are in (at most 45 s more); every entry waiting for it moves along
+  if (E.openUntil && E.clock >= E.openUntil && !E.samplesReady && E.clock < E.openStart + 57){
+    const dt = 5*E.period; E.openUntil += dt;
+    for (const s of E.slots) if (s.waitUntil !== null) s.waitUntil += dt;
+  }
   rampTick();
   const now = E.clock, dt = 5*E.period;
   const act = active();
@@ -387,7 +392,7 @@ function reset(){
   E.agents = []; E.lastT = 0; E.cycles = 0; E.log = []; E.flags = {}; E.joinCooldown = E.clock + 8; E.gather = null; E.phase = null; E.phaseQuietUntil = 0; initForm(); initTechno();
   E.gen.useEx = E.excite; E.gen.mode = E.genMode || 'v2'; E.traffic = 0.5;
   initSlots(); initTuning();
-  E.openUntil = E.clock + 12;   // the pulse plays alone for 12 s while the instrument samples load
+  E.openStart = E.clock; E.openUntil = E.clock + 12;   // the pulse plays alone for at least 12 s while the instrument samples load
   log('The pulse alone while the instruments load');
   if (FIXED){ fixEnsemble(FIXED); log(`Started (seed ${E.seedNum}, ${E.seeds.length} seed patterns)`); return; }
   const pool = E.slots.slice(), first = [];

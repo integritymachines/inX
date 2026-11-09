@@ -28,12 +28,13 @@ async function loadInstrument(inst){
 /* Players on stage first, then the rest of the roster, two at a time. */
 async function preloadSamples(){
   if (!SAMPLER.manifest) await loadManifest();
-  if (!SAMPLER.manifest) return;
+  if (!SAMPLER.manifest){ E.samplesReady = true; return; }   // no samples: the synthesized voices play
   const onStage = new Set(E.agents.map(a => SECTIONS[a.sec].sample));
   const order = [...onStage, ...ST.roster.map(k => SECTIONS[k].sample).filter(s => !onStage.has(s))];
   const queue = [...new Set(order)];
   const worker = async () => { while (queue.length) await loadInstrument(queue.shift()); };
   await Promise.all([worker(), worker()]);
+  E.samplesReady = true;
   log(`Recorded instruments loaded (${SAMPLER.loaded} of ${queue.length + SAMPLER.loaded})`);
 }
 const PANS = {};

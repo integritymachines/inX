@@ -19,7 +19,7 @@ const PRESETS = {
   focus:    {label:'Focus (ADHD)', stay:25, X:0.9, bpm:128, composers:['adams'], terry:3, pulse:0.5, players:DRIVE_PLAYERS, maxN:14, minN:3, gap:10, wet:0.22, john:0.9, drone:0.5, evo:0.6,
              mode:{peakDb:8, surprise:0.4, gridAll:false, flatten:0}, ramp:{to:'productive', sec:600},
              kit:{kickDecay:0.42, kickPitch:[155, 48], hatDecay:0.045, openDecay:0.28, clap:'clap', bass:'sub', swing:0, pump:0.55, hatK:[10, 16], percK:[3, 7], elec:1, gains:{}}},
-  inc:      {label:'In C (orchestra)', stay:60, X:0,    pulseMs:200, composers:[],                  maxN:12, wet:0.28, john:0.7, drone:0.5, evo:0.5},
+  inc:      {label:'In X (orchestra)', stay:60, X:0,    pulseMs:200, composers:[],                  maxN:12, wet:0.28, john:0.7, drone:0.5, evo:0.5},
   minimal:  {label:'Minimal', stay:30,          X:0.75, bpm:125, composers:['reich','glass'],       philip:0.6, steve:0.7, maxN:10, wet:0.22, john:0.6, drone:0.4, evo:0.6,
              kit:{kickDecay:0.3, kickPitch:[175, 52], hatDecay:0.028, openDecay:0.16, clap:'rim', bass:'sub', swing:0.06, pump:0.3, hatK:[7, 11], percK:[5, 7], elec:0.6, gains:{hat:0.8, perc:1.3, ohat:0.7}}},
   berghain: {label:'Berghain', stay:30, players:['tuba', 'trombone', 'bassoon', 'cellos', 'organ', 'horn', 'viola', 'timpani'],         X:1,    bpm:136, composers:['adams','young'],       maxN:8, wet:0.32, john:0.8, drone:0.8, evo:0.4,

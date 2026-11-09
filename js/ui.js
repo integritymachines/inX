@@ -34,7 +34,7 @@ $('#excite').addEventListener('change', e => { E.excite = e.target.checked; if (
 function syncPlayers(){
   const a = +$('#minn').value, b = +$('#maxn').value;
   $('#players-o').textContent = `${a}–${b}`;
-  $('#dfill').style.left = `${100*(a - 1)/23}%`; $('#dfill').style.right = `${100*(24 - b)/23}%`;
+  $('#dfill').style.left = `calc(${(a - 1)/23} * (100% - 16px))`; $('#dfill').style.right = `calc(${(24 - b)/23} * (100% - 16px))`;   // from thumb centre to thumb centre, padded by half a thumb
   $('#minn').style.zIndex = a > 20 ? 2 : 1;   // keep the lower thumb reachable when both sit at the top
 }
 bindRange('#minn', v => { if (v > 12){ v = 12; $('#minn').value = 12; } E.minN = v; if (+$('#maxn').value < v){ $('#maxn').value = v; E.maxN = v; } syncPlayers(); });
