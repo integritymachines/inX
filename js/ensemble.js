@@ -277,7 +277,7 @@ function canJoin(){
 }
 function spawnInto(s){
   const S = stats();
-  const idx = S.act.length ? S.med : Math.max(0, E.lastT, E.gen.pats.length - 1);
+  const idx = S.act.length ? S.med : Math.max(0, E.lastT);   // nobody playing: start where the ensemble last was (pattern 0 at the start), not at the preview's end
   const a = makeAgent(s.manual, s.sec, idx, snapUp(E.p + 1 + Math.floor(Math.random()*3)));
   E.gen.get(a.idx); setMinReps(a); a.lastT = E.lastT; a.slot = s;
   a.leaseEnd = s.manual ? Infinity : E.clock + E.leaseMid*(0.5 + Math.random());

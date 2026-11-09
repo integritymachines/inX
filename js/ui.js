@@ -151,9 +151,10 @@ function drawStream(){
   g2.font = `12px ${css('--mono')}`;
   if (!E.gen){ g2.fillStyle = muted; g2.fillText('Press "Start listening". The patterns in play will appear here.', 12, 24); return; }
   const S = stats(), have = E.gen.pats.length - 1;
-  const hi = S.act.length ? S.hi : have, lo = S.act.length ? S.lo : have;
+  const hi = S.act.length ? S.hi : 0, lo = S.act.length ? S.lo : 0;   // before anyone plays, the stream shows what is coming from pattern 0
   const N = 15, from = Math.max(0, lo - 4), to = from + N - 1;
-  if (E.started && S.act.length && !(E.gather && E.gather.dropping)) E.gen.get(to);   // generate ahead for the preview
+  // generate ahead for the preview, one pattern per frame so it never stalls the audio; this starts during the opening pulse
+  if (E.started && !(E.gather && E.gather.dropping) && have < to) E.gen.get(have + 1);
   const cells = []; for (let i=from;i<=Math.min(to, E.gen.pats.length - 1);i++) if (E.gen.pats[i]) cells.push(E.gen.pats[i]);
   const n = N, cw = (w - 8)/n, top = 16, rollH = h - 62;
   g2.font = `10.5px ${css('--mono')}`;
