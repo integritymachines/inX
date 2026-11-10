@@ -55,7 +55,8 @@ function syncTempo(){
   $('#tempo-o').textContent = club ? `${bpmOf(TECHNO.userPeriod)} BPM` : `${Math.round(TECHNO.userPeriod*1000*PPE)} ms`;
 }
 var presetQuiet = false;
-function markCustom(){ if (!presetQuiet){ $('#preset').value = 'custom'; if (RAMP && !RAMP.done){ RAMP.done = true; log('Focus ramp stopped: your settings'); } } }
+// the preset stays shown when you change controls: it is the starting point you are working from
+function markCustom(){ if (!presetQuiet){ if (RAMP && !RAMP.done){ RAMP.done = true; log('Focus ramp stopped: your settings'); } } }
 $('#tempo').addEventListener('input', e => {
   const v = +e.target.value;
   TECHNO.userPeriod = TECHNO.X >= 0.25 ? 60/(4*v) : v/1000/PPE; TECHNO.bpm = bpmOf(TECHNO.userPeriod);
@@ -74,14 +75,14 @@ function syncGrey(){
   set('#philip', TECH_ON.glass); set('#steve', TECH_ON.reich); set('#john', TECH_ON.adams); set('#lamonte', TECH_ON.young); set('#evo', TECHNO.X >= 0.2);
 }
 const presetSel = $('#preset');
-{ const groups = [['Scenes', k => !/ADHD/.test(PRESETS[k].label)], ['Modes (ADHD)', k => /ADHD/.test(PRESETS[k].label)]];
-  for (const [name, f] of groups){ const g = document.createElement('optgroup'); g.label = name;
-    for (const k of Object.keys(PRESETS).filter(f)){ const o = document.createElement('option'); o.value = k; o.textContent = PRESETS[k].label.replace(' (ADHD)', ''); g.appendChild(o); }
-    presetSel.appendChild(g); } }
-{ const o = document.createElement('option'); o.value = 'custom'; o.textContent = 'Custom'; presetSel.appendChild(o); }
+for (const [name, keys] of PRESET_GROUPS){ const g = document.createElement('optgroup'); g.label = name;
+  for (const k of keys){ const o = document.createElement('option'); o.value = k; o.textContent = k === 'random' ? 'Random' : PRESETS[k].label.replace(' (ADHD)', ''); g.appendChild(o); }
+  presetSel.appendChild(g); }
 presetSel.value = 'inc';
 syncGrey();
-presetSel.addEventListener('change', () => { if (presetSel.value !== 'custom'){ applyPreset(presetSel.value); if (E.started) log(`Preset: ${PRESETS[presetSel.value].label}`); } });
+presetSel.addEventListener('change', () => { applyPreset(presetSel.value); if (E.started) log(`Preset: ${presetSel.selectedOptions[0].textContent}`); });
+// choosing the shown preset again (e.g. Random for a new draw) needs a click on the menu: the select fires no change for the same value, so offer a re-apply on double-click
+presetSel.addEventListener('dblclick', () => applyPreset(presetSel.value));
 function onPresetApplied(P){
   presetQuiet = true;
   setRange('#techno', Math.round(P.X*100)); syncTempo();
@@ -256,3 +257,33 @@ window.addEventListener('resize', () => render());
 
 /* Test hook: run the ensemble without sound. */
 window.InX = { E, reset, stats, toggleSlot, slotState, simulate1(){ E.audio = false; pulse(0); }, simulate(n){ const was = E.audio; E.audio = false; for (let k=0;k<n;k++) pulse(0); E.audio = was; render(); } };
+
+/* Setup screen: the instruments on stage. */
+const FAMILIES = [
+  ['Keyboards', ['piano1', 'piano2', 'organ']],
+  ['Strings', ['violins', 'viola', 'cellos', 'bass']],
+  ['Plucked', ['harp', 'guitar']],
+  ['Woodwinds', ['piccolo', 'flute', 'oboe', 'clarinet', 'sax', 'bassoon']],
+  ['Brass', ['horn', 'trumpet', 'trombone', 'tuba']],
+  ['Percussion', ['marimba', 'xylo', 'glock', 'timpani', 'handperc']],
+];
+const DEFAULT_ROSTER = STYLES.inc.roster.slice();
+const ROLE_ABBR = {foundation:'F', line:'L', color:'C'};
+function syncSetup(){
+  const on = new Set(ST.roster);
+  $('#picker').innerHTML = FAMILIES.map(([fam, keys]) => `<div class="fam">${fam}</div><div class="picks">` +
+    keys.filter(k => SECTIONS[k]).map(k => `<button type="button" class="pick${on.has(k) ? ' on' : ''}" data-sec="${k}" aria-pressed="${on.has(k)}"><span class="dot" style="background:${SECTIONS[k].color}"></span>${SECTIONS[k].label}<span class="role" title="${SECTIONS[k].role}">${ROLE_ABBR[SECTIONS[k].role]}</span></button>`).join('') + '</div>').join('');
+  $('#pick-count').textContent = `${ST.roster.length} of 24`;
+}
+$('#picker').addEventListener('click', e => {
+  const b = e.target.closest('.pick'); if (!b) return;
+  const k = b.dataset.sec, cur = ST.roster.slice();
+  let next;
+  if (cur.includes(k)){ if (cur.length <= 2) return; next = cur.filter(x => x !== k); }
+  else { if (cur.length >= 24) return; next = cur.concat(k); }
+  const order = FAMILIES.flatMap(f => f[1]);   // keep the stage in family order
+  next.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  setRoster(next); syncSetup();
+});
+$('#pick-default').addEventListener('click', () => { setRoster(DEFAULT_ROSTER); syncSetup(); });
+syncSetup();

@@ -83,11 +83,13 @@ const TECH = {
 };
 const TECH_ON = {reich:false, glass:false, adams:false, young:false};
 let BASE_KEY = 'inc';
+let ROSTER = null;   // the line-up chosen in Setup (null: the default 24)
 function composeStyle(){
   const st = Object.assign({}, STYLES[BASE_KEY]);
   for (const [k, t] of Object.entries(TECH)) if (TECH_ON[k]) Object.assign(st, t.keys);
   const on = Object.keys(TECH).filter(k => TECH_ON[k]).map(k => TECH[k].label);
   st.label = STYLES[BASE_KEY].label + (on.length ? ' + ' + on.join(', ') : '');
+  if (ROSTER) st.roster = ROSTER.slice();
   ST = st; SPREAD = TERRY.spread;
 }
 function setTechnique(k, on){ TECH_ON[k] = !!on; composeStyle(); }

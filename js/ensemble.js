@@ -221,7 +221,20 @@ function pulsePitch(S){
 /* A mode can fix the ensemble: the listed players come in and stay (no lease), simulated visitors stay away, and a
    gathering calls in only the fixed players. Leaving such a mode hands the fixed players back to ordinary leases. */
 let FIXED = null;
+/* Change the line-up on stage while playing: kept instruments keep their players, new ones get empty slots,
+   and players whose instrument is taken off finish their pattern and leave. */
+function setRoster(list){
+  ROSTER = list.slice(); ST.roster = list.slice();
+  if (!E.slots || !E.slots.length) return;
+  const old = E.slots;
+  E.slots = list.map((sec, i) => { const s = old.find(x => x.sec === sec); if (s){ s.i = i; return s; } return {i, sec, agent:null, waitUntil:null, userOff:false, manual:false}; });
+  for (const s of old) if (!list.includes(s.sec)){ const a = s.agent; if (a && !a.removed){ if (a.mode === 'out') a.removed = true; else a.leaving = true; } }
+  if (typeof buildRoster === 'function' && E.started) buildRoster();
+}
 function fixEnsemble(list){
+  // a preset's line-up must be on stage: swap in any missing instrument in place of one the preset doesn't use
+  const missing = list.filter(x => !ST.roster.includes(x));
+  if (missing.length){ const r = ST.roster.slice(); for (const m of missing){ for (let j = r.length - 1; j >= 0; j--) if (!list.includes(r[j])){ r[j] = m; break; } } setRoster(r); if (typeof syncSetup === 'function') syncSetup(); }
   FIXED = list.slice(); let k = 0;
   for (const s of E.slots){
     const a = s.agent && !s.agent.removed ? s.agent : null;

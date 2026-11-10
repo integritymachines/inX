@@ -13,7 +13,7 @@ python3 -m http.server 8765
 # then open http://localhost:8765/
 ```
 
-Press **Start**. The numbered notes below the dashboard explain every control.
+Press **Start**. The page has three screens, one below the other: the dashboard you play from, **Setup** (which instruments are on stage, and the seed patterns), and **Notes**, which explain every control. The preset menu lists general scenes, then Berlin clubs (Berghain, Panorama Bar, Wilde Renate, Tresor, KitKat, Kater Blau, Club der Visionäre, Sisyphos), then the modes; *Middle* and *Random* are neutral and random starting points.
 
 ## How it works
 

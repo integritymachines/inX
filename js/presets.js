@@ -48,8 +48,27 @@ const PRESETS = {
              kit:{kickDecay:0.45, kickPitch:[120, 45], hatDecay:0.05, openDecay:0.35, clap:'snare', bass:'sub', swing:0.1, pump:0.35, halftime:true, hatK:[6, 9], percK:[3, 4], elec:0.6, gains:{hat:0.7, perc:0.6, kick:0.85}}}
 };
 let PRESET_KEY = 'inc';
+/* Menu order: general scenes, then Berlin clubs, then the modes. */
+const PRESET_GROUPS = [
+  ['Scenes', ['inc', 'minimal', 'techno', 'acid', 'house', 'chillwave', 'middle', 'random']],
+  ['Berlin clubs', ['berghain', 'panorama', 'renate', 'tresor', 'kitkat', 'katerblau', 'visionaere', 'sisyphos']],
+  ['Modes (ADHD)', ['productive', 'creative', 'focus']],
+];
+/* Middle: every control at the middle of its range, all composers on at half depth. */
+PRESETS.middle = {label:'Middle', stay:24, X:0.5, bpm:120, composers:['glass','reich','adams','young'], terry:4, pulse:0.5, philip:0.5, steve:0.5,
+                  minN:3, maxN:12, gap:64, wet:0.28, john:0.5, drone:0.5, evo:0.5, kit:{elec:0.5, gains:{}}};
+/* Random: a fresh draw each time it is chosen. */
+function randomPreset(){
+  const r = (a, b) => a + Math.random()*(b - a), ri = (a, b) => Math.floor(r(a, b + 1)), pick = a => a[Math.floor(Math.random()*a.length)];
+  const X = Math.random() < 0.35 ? 0 : r(0.2, 1), maxN = ri(6, 20);
+  const kits = Object.values(PRESETS).filter(p => p.kit && p.kit.kickDecay).map(p => p.kit);
+  return {label:'Random', stay:ri(10, 90), X, ...(X >= 0.25 ? {bpm:ri(95, 140)} : {pulseMs:ri(140, 400)}),
+    composers:['glass','reich','adams','young'].filter(() => Math.random() < 0.5), terry:ri(1, 8), pulse:r(0, 1), philip:r(0, 1), steve:r(0, 1),
+    minN:ri(2, Math.min(6, maxN)), maxN, gap:2*ri(8, 40), wet:r(0.15, 0.4), john:r(0.2, 1), drone:r(0.2, 0.8), evo:r(0, 1),
+    kit:X >= 0.2 ? Object.assign({}, pick(kits), {elec:r(0, 1)}) : null};
+}
 function applyPreset(key){
-  const P = PRESETS[key]; if (!P) return;
+  const P = key === 'random' ? randomPreset() : PRESETS[key]; if (!P) return;
   PRESET_KEY = key;
   TECHNO.kit = P.kit ? Object.assign({}, KIT_DEFAULT, P.kit, {gains:Object.assign({}, P.kit.gains || {})}) : null;
   if (P.bpm) TECHNO.userPeriod = 60/(4*P.bpm);
