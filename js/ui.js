@@ -265,7 +265,7 @@ const FAMILIES = [
   ['Plucked', ['harp', 'guitar']],
   ['Woodwinds', ['piccolo', 'flute', 'oboe', 'clarinet', 'sax', 'bassoon']],
   ['Brass', ['horn', 'trumpet', 'trombone', 'tuba']],
-  ['Percussion', ['marimba', 'xylo', 'glock', 'timpani', 'handperc']],
+  ['Percussion', ['marimba', 'xylo', 'glock', 'timpani', 'handperc', 'congas', 'darbuka', 'bells']],
 ];
 const DEFAULT_ROSTER = STYLES.inc.roster.slice();
 const ROLE_ABBR = {foundation:'F', line:'L', color:'C'};

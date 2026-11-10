@@ -6,7 +6,7 @@
    pan: seat in the stereo field (left −1 … right +1), roughly orchestral. Colors group the families. */
 const SECTIONS = {
   piano1:  {label:'Piano I',         role:'line', sample:'piano1',  synth:'pluck',   oct:0,  pan:-0.35, color:'#e0663a'},
-  piano2:  {label:'Piano II',        role:'line', sample:'piano2',  synth:'pluck',   oct:0,  pan:0.35,  color:'#c4532c'},
+  piano2:  {label:'Grand piano',     role:'line', sample:'piano2',  synth:'pluck',   oct:0,  pan:0.35,  color:'#c4532c'},
   organ:   {label:'Organ',           role:'line', sample:'organ',   synth:'reed',    oct:0,  pan:0,     color:'#a8642f', cut:1800},
   violins: {label:'Violins',         role:'line', sample:'violins', synth:'bowed',   oct:0,  pan:-0.6,  color:'#b8467a', cut:3500},
   viola:   {label:'Violas',          role:'line', sample:'viola',   synth:'bowed',   oct:0,  pan:-0.2,  color:'#9c3d8f', cut:2200},
@@ -28,7 +28,11 @@ const SECTIONS = {
   xylo:    {label:'Xylophone',       role:'color', sample:'xylo',    synth:'xylo',    oct:1,  pan:0.45,  color:'#2f6db5'},
   glock:   {label:'Glockenspiel',    role:'color', sample:'glock',   synth:'mallet',  oct:2,  pan:-0.3,  color:'#5c6bc0'},
   timpani: {label:'Timpani',         role:'foundation', sample:'timpani', synth:'bass',    oct:-1, pan:0,     color:'#6d7781'},
-  handperc:{label:'Hand percussion', role:'color', sample:'handperc',synth:'perc',    oct:0,  pan:0.15,  color:'#8a94a0'}
+  handperc:{label:'Hand percussion', role:'color', sample:'handperc',synth:'perc',    oct:0,  pan:0.15,  color:'#8a94a0'},
+  // beyond the default 24, chosen in Setup (VCSL, CC0)
+  congas:  {label:'Congas & bongos', role:'color', sample:'congas',  synth:'perc',    oct:0,  pan:-0.25, color:'#b07a4f'},
+  darbuka: {label:'Darbuka & frame drum', role:'color', sample:'darbuka', synth:'perc', oct:0, pan:0.3, color:'#a0603a'},
+  bells:   {label:'Bells & woods',   role:'color', sample:'bells',   synth:'perc',    oct:0,  pan:-0.1,  color:'#c9a227'}
 };
 for (const k in SECTIONS) SECTIONS[k].key = k;
 const ROLES = ['foundation', 'line', 'color'];

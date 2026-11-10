@@ -52,6 +52,7 @@ samples/            instrument samples (mono MP3) and manifest.json
 The code is under the MIT License (see `LICENSE`). The samples keep their own licenses:
 
 - [VSCO 2 Community Edition](https://vis.versilstudios.net/vsco-community.html) by Versilian Studios, Sam Gossner and Simon Dalzell: CC0.
+- [Versilian Community Sample Library](https://github.com/sgossner/VCSL) (VCSL) by Versilian Studios: CC0. Grand piano (Steinway B), congas and bongos, darbuka and frame drums, agogô, cowbell, claves, woodblock and triangle.
 - Saxophone and guitar from the [Tone.js instrument samples](https://github.com/nbrosowsky/tonejs-instruments) by Nicholas Brosowsky ([CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)), originally from Karoryfer Samples and the University of Iowa Electronic Music Studios.
 
 In C is Terry Riley's. The default seed patterns are original placeholders; to start from In C itself, paste its 53 patterns from your copy of the score into the Seed patterns field.

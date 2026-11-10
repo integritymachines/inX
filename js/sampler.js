@@ -6,7 +6,7 @@
    recorded range move by octaves into it. Strings, winds and brass have short and sustained recordings, chosen by note length.
    Until an instrument has loaded, its synth voice stands in. */
 const SAMPLER = {manifest:null, buf:{}, ready:{}, loading:{}, failed:false, loaded:0};
-const RING = {piano1:0.9, piano2:0.8, harp:1.4, guitar:1.0, marimba:0.5, xylo:0.35, glock:1.6, timpani:1.4, handperc:0.25};
+const RING = {piano1:0.9, piano2:0.8, harp:1.4, guitar:1.0, marimba:0.5, xylo:0.35, glock:1.6, timpani:1.4, handperc:0.25, congas:0.3, darbuka:0.3, bells:0.6};
 async function loadManifest(){
   try { const r = await fetch('samples/manifest.json'); if (!r.ok) throw new Error(r.status); SAMPLER.manifest = await r.json(); }
   catch (e){ SAMPLER.failed = true; log('Recorded instruments could not be loaded; synth voices play instead.'); }

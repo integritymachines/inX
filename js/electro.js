@@ -13,7 +13,8 @@ const ELECTRO = {
   sax:{type:'lead', bright:1.0, wave:'sawtooth'}, bassoon:{type:'reese', bright:0.8},
   horn:{type:'brass', bright:0.8}, trumpet:{type:'brass', bright:1.3}, trombone:{type:'brass', bright:0.9},
   tuba:{type:'sub', bright:1}, marimba:{type:'fm', ratio:4, index:2, decay:0.5}, xylo:{type:'fm', ratio:3.5, index:3, decay:0.25},
-  glock:{type:'fm', ratio:1.41, index:4, decay:1.4}, timpani:{type:'tom'}, handperc:{type:'click'}
+  glock:{type:'fm', ratio:1.41, index:4, decay:1.4}, timpani:{type:'tom'}, handperc:{type:'click'},
+  congas:{type:'tom'}, darbuka:{type:'tom'}, bells:{type:'click'}
 };
 let PULSE_WAVE = null;
 function pulseWave(c){
