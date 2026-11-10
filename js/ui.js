@@ -260,15 +260,18 @@ window.InX = { E, reset, stats, toggleSlot, slotState, simulate1(){ E.audio = fa
 
 /* Setup screen: the instruments on stage. */
 const FAMILIES = [
-  ['Keyboards', ['piano1', 'piano2', 'organ']],
+  ['Keyboards', ['piano1', 'piano2', 'harpsi', 'organ']],
   ['Strings', ['violins', 'viola', 'cellos', 'bass']],
   ['Plucked', ['harp', 'guitar']],
-  ['Woodwinds', ['piccolo', 'flute', 'oboe', 'clarinet', 'sax', 'bassoon']],
+  ['Woodwinds', ['piccolo', 'flute', 'recorder', 'oboe', 'clarinet', 'sax', 'bassoon', 'harmonica']],
   ['Brass', ['horn', 'trumpet', 'trombone', 'tuba']],
-  ['Percussion', ['marimba', 'xylo', 'glock', 'timpani', 'handperc', 'congas', 'darbuka', 'bells']],
+  ['Mallets & bells', ['marimba', 'xylo', 'glock', 'vibes', 'tubular']],
+  ['World', ['kalimba', 'mbira', 'balafon', 'dantranh', 'saron', 'gender']],
+  ['Synthesizers', ['moog', 'm1organ', 'ms20', 'juno', 'polysix', 'prophet']],
+  ['Percussion', ['timpani', 'handperc', 'congas', 'darbuka', 'bells']],
 ];
 const DEFAULT_ROSTER = STYLES.inc.roster.slice();
-const ROLE_ABBR = {foundation:'F', line:'L', color:'C'};
+const ROLE_ABBR = {foundation:'F', line:'L', color:'C', beat:'B'};
 function syncSetup(){
   const on = new Set(ST.roster);
   $('#picker').innerHTML = FAMILIES.map(([fam, keys]) => `<div class="fam">${fam}</div><div class="picks">` +

@@ -16,7 +16,7 @@ function technoPeriod(){ return TECHNO.userPeriod; }   // one tempo for everythi
 function bpmOf(period){ return Math.round(60/(4*period)); }
 function gridStep(){ return TECHNO.X >= 0.5 ? BAR : TECHNO.X >= 0.15 ? 4 : PPE; }   // entries land at least on an eighth note
 function snapUp(p){ const g = gridStep(); return Math.ceil(p/g)*g; }
-function strictGrid(a){ return TECHNO.X >= 0.5 && (SECTIONS[a.sec].role === 'foundation' || MODE.gridAll); }   // Focus locks every player to 4/4
+function strictGrid(a){ return TECHNO.X >= 0.5 && (SECTIONS[a.sec].role === 'foundation' || SECTIONS[a.sec].role === 'beat' || MODE.gridAll); }   // Focus locks every player to 4/4
 function pow2len(len){ let L = 4; while (L < len) L *= 2; return L; }
 function technoStage(){
   const X = TECHNO.X;

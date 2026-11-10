@@ -6,7 +6,7 @@
       FULL_DB louder than two players. Intended dynamics (Terry's slow shaping, John's waves, the climax, the dropout)
       act on top of this.
    2. Terry's shaping: without John's waves, the level breathes slowly, about ±3 dB over a few minutes.
-   3. Orchestration: arrivals favor the group (foundation, line, color) the ensemble is missing or short of. */
+   3. Orchestration: arrivals favor the group (foundation, line, color, beat) the ensemble is missing or short of. */
 const FULL_DB = 3;                 // 24 players may be this much louder than 2
 const DYN = {loud:0, comp:1, lastN:0};
 function playerEnergy(a){
@@ -36,7 +36,7 @@ function terryDb(){ const t = E.clock; return (1 - MODE.flatten)*(2.2*Math.sin(2
 function formGain(){ return ST.wave ? waveGain() : Math.pow(10, terryDb()/20); }
 /* Orchestration: how far each group is from its share, counting players sounding and on their way. */
 function roleNeed(extra = []){
-  const cnt = {foundation:0, line:0, color:0}; let total = 0;
+  const cnt = {foundation:0, line:0, color:0, beat:0}; let total = 0;
   for (const a of active()){ cnt[SECTIONS[a.sec].role]++; total++; }
   for (const s of E.slots) if (s.waitUntil !== null && !s.agent){ cnt[SECTIONS[s.sec].role]++; total++; }
   for (const s of extra){ cnt[SECTIONS[s.sec].role]++; total++; }

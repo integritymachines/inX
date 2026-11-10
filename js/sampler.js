@@ -6,7 +6,8 @@
    recorded range move by octaves into it. Strings, winds and brass have short and sustained recordings, chosen by note length.
    Until an instrument has loaded, its synth voice stands in. */
 const SAMPLER = {manifest:null, buf:{}, ready:{}, loading:{}, failed:false, loaded:0};
-const RING = {piano1:0.9, piano2:0.8, harp:1.4, guitar:1.0, marimba:0.5, xylo:0.35, glock:1.6, timpani:1.4, handperc:0.25, congas:0.3, darbuka:0.3, bells:0.6};
+const RING = {piano1:0.9, piano2:0.8, harp:1.4, guitar:1.0, marimba:0.5, xylo:0.35, glock:1.6, timpani:1.4, handperc:0.25, congas:0.3, darbuka:0.3, bells:0.6,
+  harpsi:1.0, vibes:1.8, tubular:2.5, kalimba:0.8, mbira:0.8, balafon:0.5, dantranh:1.2};
 async function loadManifest(){
   try { const r = await fetch('samples/manifest.json'); if (!r.ok) throw new Error(r.status); SAMPLER.manifest = await r.json(); }
   catch (e){ SAMPLER.failed = true; log('Recorded instruments could not be loaded; synth voices play instead.'); }
@@ -30,7 +31,7 @@ async function preloadSamples(){
   if (!SAMPLER.manifest) await loadManifest();
   if (!SAMPLER.manifest){ E.samplesReady = true; return; }   // no samples: the synthesized voices play
   const onStage = new Set(E.agents.map(a => SECTIONS[a.sec].sample));
-  const order = [...onStage, ...ST.roster.map(k => SECTIONS[k].sample).filter(s => !onStage.has(s))];
+  const order = [...onStage, ...ST.roster.map(k => SECTIONS[k].sample).filter(s => !onStage.has(s))].filter(s => s);
   const queue = [...new Set(order)];
   const worker = async () => { while (queue.length) await loadInstrument(queue.shift()); };
   await Promise.all([worker(), worker()]);
@@ -72,8 +73,17 @@ function playNote(key, m, t, dur, gain, bright){
   const spec = SECTIONS[key], dest = sectionOut(key);
   const e = elecMix();                                        // equal-power crossfade, recording → electronic voice
   const ga = Math.cos(e*Math.PI/2), ge = Math.sin(e*Math.PI/2);
+  // beat players (drums, timpani, bells and woods) are lifted as Techno rises, so the kick's ducking and the
+  // filtered mix don't bury them, and the foundation is eased back; quiet click voices may be trimmed further than the others
+  const beat = spec.role === 'beat';
+  if (beat) gain *= Math.pow(10, 3*smooth(0.3, 0.8, TECHNO.X)/20);
+  if (spec.role === 'foundation') gain *= Math.pow(10, -3*smooth(0.3, 0.8, TECHNO.X)/20);   // the electronic bass voices run hot; the techno bass already carries the low end
+  if (spec.synthOnly){   // synthesized instruments have no recording: always their own voice
+    const trim = ELECTRO_DB[key] ? clamp(ELECTRO_DB[key][dur > 0.32 ? 'long' : 'short'], -20, 20) : -8;
+    electroVoice(key, m, t, dur, 0.24*gain*Math.pow(10, (trim + ROLE_DB[spec.role])/20), bright, dest); return;
+  }
   if (ge > 0.02){
-    const trim = ELECTRO_DB[key] ? clamp(ELECTRO_DB[key][dur > 0.32 ? 'long' : 'short'], -12, 12) : -8;
+    const trim = ELECTRO_DB[key] ? clamp(ELECTRO_DB[key][dur > 0.32 ? 'long' : 'short'], beat ? -24 : -12, beat ? 24 : 12) : -8;
     electroVoice(key, m, t, dur, 0.24*gain*ge*Math.pow(10, (trim + ROLE_DB[spec.role])/20), bright, dest);
   }
   if (ga < 0.02) return;

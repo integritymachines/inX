@@ -1,7 +1,7 @@
 'use strict';
 /* Sound layer: instruments, synthesis, mix. */
 /* ---------------- Instruments ---------------- */
-/* 24 players. role: foundation (bass register), line (melodic middle) or color (bright accents, unpitched);
+/* 24 players. role: foundation (bass register), line (melodic middle), color (bright accents) or beat (percussive: drums, timpani, bells and woods);
    sample: the recorded instrument; synth: the stand-in voice until it has loaded; oct: register;
    pan: seat in the stereo field (left −1 … right +1), roughly orchestral. Colors group the families. */
 const SECTIONS = {
@@ -27,17 +27,35 @@ const SECTIONS = {
   marimba: {label:'Marimba',         role:'color', sample:'marimba', synth:'marimba', oct:0,  pan:-0.5,  color:'#3f86c9'},
   xylo:    {label:'Xylophone',       role:'color', sample:'xylo',    synth:'xylo',    oct:1,  pan:0.45,  color:'#2f6db5'},
   glock:   {label:'Glockenspiel',    role:'color', sample:'glock',   synth:'mallet',  oct:2,  pan:-0.3,  color:'#5c6bc0'},
-  timpani: {label:'Timpani',         role:'foundation', sample:'timpani', synth:'bass',    oct:-1, pan:0,     color:'#6d7781'},
-  handperc:{label:'Hand percussion', role:'color', sample:'handperc',synth:'perc',    oct:0,  pan:0.15,  color:'#8a94a0'},
+  timpani: {label:'Timpani',         role:'beat', sample:'timpani', synth:'bass',    oct:-1, pan:0,     color:'#6d7781'},
+  handperc:{label:'Hand percussion', role:'beat', sample:'handperc',synth:'perc',    oct:0,  pan:0.15,  color:'#8a94a0'},
   // beyond the default 24, chosen in Setup (VCSL, CC0)
-  congas:  {label:'Congas & bongos', role:'color', sample:'congas',  synth:'perc',    oct:0,  pan:-0.25, color:'#b07a4f'},
-  darbuka: {label:'Darbuka & frame drum', role:'color', sample:'darbuka', synth:'perc', oct:0, pan:0.3, color:'#a0603a'},
-  bells:   {label:'Bells & woods',   role:'color', sample:'bells',   synth:'perc',    oct:0,  pan:-0.1,  color:'#c9a227'}
+  congas:  {label:'Congas & bongos', role:'beat', sample:'congas',  synth:'perc',    oct:0,  pan:-0.25, color:'#b07a4f'},
+  darbuka: {label:'Darbuka & frame drum', role:'beat', sample:'darbuka', synth:'perc', oct:0, pan:0.3, color:'#a0603a'},
+  bells:   {label:'Bells & woods',   role:'beat', sample:'bells',   synth:'perc',    oct:0,  pan:-0.1,  color:'#c9a227'},
+  harpsi:  {label:'Harpsichord',     role:'line', sample:'harpsi',  synth:'pluck',   oct:0,  pan:-0.4,  color:'#b5702d'},
+  vibes:   {label:'Vibraphone',      role:'color', sample:'vibes',  synth:'mallet',  oct:0,  pan:0.35,  color:'#4f8fd6'},
+  tubular: {label:'Tubular bells',   role:'color', sample:'tubular', synth:'mallet', oct:0,  pan:0.1,   color:'#7d8fd9'},
+  kalimba: {label:'Kalimba',         role:'color', sample:'kalimba', synth:'pluck',  oct:1,  pan:-0.55, color:'#c47a3a'},
+  mbira:   {label:'Mbira',           role:'line', sample:'mbira',   synth:'pluck',   oct:0,  pan:0.5,   color:'#9a6233'},
+  balafon: {label:'Balafon',         role:'color', sample:'balafon', synth:'marimba', oct:0, pan:-0.35, color:'#7a9a3a'},
+  dantranh:{label:'Đàn tranh',       role:'line', sample:'dantranh', synth:'pluck',  oct:0,  pan:0.6,   color:'#c2558a'},
+  recorder:{label:'Alto recorder',   role:'line', sample:'recorder', synth:'flute',  oct:1,  pan:-0.25, color:'#33a58a'},
+  harmonica:{label:'Harmonica',      role:'line', sample:'harmonica', synth:'reed',  oct:0,  pan:0.3,   color:'#6d8f3a', cut:2400},
+  // synthesized instruments: no recordings; vintage synthesizers imitated with Web Audio, and a gamelan pair
+  moog:    {label:'Moog bass',       role:'foundation', sample:null, synthOnly:true, synth:'bass', oct:-2, pan:0,    color:'#3d3d8f'},
+  ms20:    {label:'MS-20 lead',      role:'line', sample:null, synthOnly:true, synth:'reed',  oct:0,  pan:0.2,   color:'#8f3d5c'},
+  juno:    {label:'Juno pad',        role:'color', sample:null, synthOnly:true, synth:'bowed', oct:0, pan:-0.3,  color:'#3d8f8a'},
+  polysix: {label:'Polysix strings', role:'line', sample:null, synthOnly:true, synth:'bowed', oct:0,  pan:0.45,  color:'#5c8f3d'},
+  prophet: {label:'Prophet brass',   role:'line', sample:null, synthOnly:true, synth:'brass', oct:0,  pan:-0.45, color:'#8f6a3d'},
+  m1organ: {label:'M1 organ bass',   role:'foundation', sample:null, synthOnly:true, synth:'bass', oct:-1, pan:0.1, color:'#6a3d8f'},
+  saron:   {label:'Saron (gamelan)', role:'line', sample:null, synthOnly:true, synth:'mallet', oct:0, pan:-0.2,  color:'#b08a2e'},
+  gender:  {label:'Gendèr (gamelan)', role:'color', sample:null, synthOnly:true, synth:'mallet', oct:0, pan:0.25, color:'#8a6d2e'}
 };
 for (const k in SECTIONS) SECTIONS[k].key = k;
-const ROLES = ['foundation', 'line', 'color'];
-const ROLE_SHARE = {foundation:0.25, line:0.5, color:0.25};   // the mix the ensemble aims for
-const ROLE_DB = {foundation:-2, line:0, color:-4};            // where each group sits in the balance
+const ROLES = ['foundation', 'line', 'color', 'beat'];
+const ROLE_SHARE = {foundation:0.22, line:0.45, color:0.18, beat:0.15};   // the mix the ensemble aims for
+const ROLE_DB = {foundation:-2, line:0, color:-4, beat:-2};   // where each group sits in the balance
 const SYNTH_GAIN = {perc:0.6, harpsi:0.5, pluck:0.85, mallet:0.75, bowed:0.5, reed:0.45, flute:0.7, brass:0.42, bass:0.9, pulse:0.45, marimba:0.95, xylo:0.7, voice:0.55};
 
 let ctx = null, bus = null, analyser = null, music = null, duck = null, drumBus = null, wetGain = null, mlp = null;

@@ -230,6 +230,8 @@ function setRoster(list){
   E.slots = list.map((sec, i) => { const s = old.find(x => x.sec === sec); if (s){ s.i = i; return s; } return {i, sec, agent:null, waitUntil:null, userOff:false, manual:false}; });
   for (const s of old) if (!list.includes(s.sec)){ const a = s.agent; if (a && !a.removed){ if (a.mode === 'out') a.removed = true; else a.leaving = true; } }
   if (typeof buildRoster === 'function' && E.started) buildRoster();
+  // instruments new to the stage load their recordings now (a synthesized voice stands in meanwhile)
+  if (E.started && typeof SAMPLER !== 'undefined' && SAMPLER.manifest) for (const k of list){ const smp = SECTIONS[k].sample; if (smp && !SAMPLER.ready[smp] && !SAMPLER.loading?.[smp]){ (SAMPLER.loading ||= {})[smp] = true; loadInstrument(smp); } }
 }
 function fixEnsemble(list){
   // a preset's line-up must be on stage: swap in any missing instrument in place of one the preset doesn't use

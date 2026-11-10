@@ -14,7 +14,15 @@ const ELECTRO = {
   horn:{type:'brass', bright:0.8}, trumpet:{type:'brass', bright:1.3}, trombone:{type:'brass', bright:0.9},
   tuba:{type:'sub', bright:1}, marimba:{type:'fm', ratio:4, index:2, decay:0.5}, xylo:{type:'fm', ratio:3.5, index:3, decay:0.25},
   glock:{type:'fm', ratio:1.41, index:4, decay:1.4}, timpani:{type:'tom'}, handperc:{type:'click'},
-  congas:{type:'tom'}, darbuka:{type:'tom'}, bells:{type:'click'}
+  congas:{type:'tom'}, darbuka:{type:'tom'}, bells:{type:'click'},
+  harpsi:{type:'stab', bright:1.3}, vibes:{type:'fm', ratio:4, index:1.5, decay:1.2}, tubular:{type:'fm', ratio:1.41, index:3, decay:2},
+  kalimba:{type:'pluck', bright:1.3}, mbira:{type:'pluck', bright:1.0}, balafon:{type:'fm', ratio:4, index:2.5, decay:0.4},
+  dantranh:{type:'pluck', bright:1.1}, recorder:{type:'lead', bright:0.9, wave:'triangle'}, harmonica:{type:'lead', bright:1.1, wave:'pulse'},
+  // synthesized instruments (these always sound electronic)
+  moog:{type:'moog', bright:1}, ms20:{type:'ms20', bright:1}, juno:{type:'juno', bright:1, wave:'pulse'}, polysix:{type:'juno', bright:0.8, wave:'square'},
+  prophet:{type:'brass', bright:1.15}, m1organ:{type:'m1organ', bright:1},
+  saron:{type:'metal', ratios:[1, 2.76, 5.4, 8.93], amps:[1, 0.5, 0.25, 0.12], decay:1.4, beat:6},
+  gender:{type:'metal', ratios:[1, 3.9, 9.6], amps:[1, 0.18, 0.06], decay:3.2, beat:4}
 };
 let PULSE_WAVE = null;
 function pulseWave(c){
@@ -63,6 +71,36 @@ function electroVoice(key, m, t, dur, vel, bright, dest){
       car.frequency.value = f; mod.frequency.value = f*P.ratio; mg.gain.setValueAtTime(f*P.index*b, t); mg.gain.exponentialRampToValueAtTime(Math.max(1, f*0.05), t + P.decay*0.6);
       mod.connect(mg); mg.connect(car.frequency); car.connect(g); oscs.push(car, mod);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + P.decay + Math.min(dur, 0.3)); end = t + P.decay + Math.min(dur, 0.3); break; }
+    case 'moog': {   // three oscillators into a 24 dB ladder-style low-pass with its own envelope
+      const F2 = lp(900*b, 0.7), F = c.createBiquadFilter(); F.type = 'lowpass'; F.Q.value = 5; F.connect(F2);
+      F.frequency.setValueAtTime(220, t); F.frequency.linearRampToValueAtTime(Math.min(16000, 220 + 2800*b), t + 0.01); F.frequency.exponentialRampToValueAtTime(700*b, t + 0.28);
+      osc('sawtooth', f, 0, 0.45, F); osc('sawtooth', f, 7, 0.45, F); osc('square', f/2, 0, 0.35, F);
+      end = adsr(0.004, 0.2, 0.7, 0.08); break; }
+    case 'ms20': {   // raw saw and square through a driven, resonant high-pass and a screaming low-pass
+      const F = lp(4000*b, 11), hp = c.createBiquadFilter(), sh = c.createWaveShaper(), cv = new Float32Array(256);
+      for (let i=0;i<256;i++){ const x = i/127.5 - 1; cv[i] = Math.tanh(2.5*x); } sh.curve = cv;
+      hp.type = 'highpass'; hp.frequency.value = Math.max(80, f*0.7); hp.Q.value = 4; sh.connect(hp); hp.connect(F);
+      F.frequency.setValueAtTime(Math.min(16000, 5200*b), t); F.frequency.exponentialRampToValueAtTime(650, t + 0.22);
+      osc('sawtooth', f, 0, 0.5, sh); osc('square', f, 9, 0.3, sh);
+      end = adsr(0.002, 0.16, 0.5, 0.06); break; }
+    case 'juno': {   // a pulse (or square) and a saw, gently chorused, slow to rise and fall
+      const F = lp(2000*b, 0.9);
+      for (const d of [-11, 11]){ const o = osc(P.wave || 'pulse', f, d, 0.32, F); const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = d > 0 ? 0.55 : 0.43; lg.gain.value = 6; l.connect(lg); lg.connect(o.detune); oscs.push(l); }
+      osc('sawtooth', f, 0, 0.25, F); osc('sine', f/2, 0, 0.2, F);
+      end = adsr(0.22, 0.4, 0.8, 0.7); break; }
+    case 'm1organ': {   // the early-'90s house organ bass: a few sine partials with a percussive click and quick decay
+      const F = lp(3500, 0.7); [[1, 0.8], [2, 0.5], [3, 0.25], [4, 0.18], [6, 0.08]].forEach(([k, a]) => osc('sine', f*k, 0, a, F));
+      const n = c.createBufferSource(), bp = c.createBiquadFilter(), ng = c.createGain(); n.buffer = clickNoise(c); bp.type = 'bandpass'; bp.frequency.value = 2500; bp.Q.value = 2;
+      ng.gain.setValueAtTime(0.25, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.02); n.connect(bp); bp.connect(ng); ng.connect(F); oscs.push(n);
+      end = adsr(0.002, 0.14, 0.55, 0.05); break; }
+    case 'metal': {   // bronze bars: inharmonic partials, each decaying at its own rate, sounded as a pair tuned a few Hz apart (ombak)
+      const D = P.decay + Math.min(dur, 0.4); g.gain.value = vel;
+      for (const pair of [0, P.beat]) P.ratios.forEach((r, i) => {
+        const pg = c.createGain(), o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f*r + pair; o.connect(pg); pg.connect(g); oscs.push(o);
+        const d = D/(1 + 1.5*i), a = 0.5*P.amps[i]*(i === 0 ? 1 : b);
+        pg.gain.setValueAtTime(0.0001, t); pg.gain.exponentialRampToValueAtTime(a, t + 0.004); pg.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      });
+      end = t + D; break; }
     case 'tom': { const o = osc('sine', f*1.6, 0, 1, g); o.frequency.setValueAtTime(f*1.6, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.07);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35); end = t + 0.36; break; }
     case 'click': {   // unpitched: register picks the colour
