@@ -15,7 +15,7 @@ python3 -m http.server 8765
 
 Press **Start**. The page has three screens, one below the other: the dashboard you play from, **Setup** (which instruments are on stage, and the seed patterns), and **Notes**, which explain every control. The preset menu lists general scenes, then Berlin clubs (Berghain, Panorama Bar, Wilde Renate, Tresor, KitKat, Kater Blau, Club der Visionäre, Sisyphos), then the modes; *Middle* and *Random* are neutral and random starting points.
 
-A **scene** (Setup screen) is one JSON object holding seed patterns, settings and line-up: write one by hand, copy the running settings into one, save it as a file (and in the browser, under *My scenes*), or open one. The notes list every field.
+A **scene** (Setup screen) is one JSON object holding seed patterns, settings and line-up: write one by hand, copy the running settings into one, save it as a file (and in the browser, under *My scenes*), or open one. The notes list every field. Built-in *Styles* scenes (Pulse study, Additive, Long loops, Shaker, Tintinnabuli, Kotekan) are written in the manner of Reich, Glass, Eno, Adams, Pärt and Balinese gamelan, with original material.
 
 ## How it works
 

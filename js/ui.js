@@ -82,6 +82,7 @@ const presetSel = $('#preset');
 function buildPresetMenu(){
   const cur = presetSel.value; presetSel.innerHTML = '';
   const groups = PRESET_GROUPS.map(([name, keys]) => [name, keys.map(k => [k, k === 'random' ? 'Random' : PRESETS[k].label.replace(' (ADHD)', '')])]);
+  groups.splice(1, 0, ['Styles', Object.entries(STYLE_SCENES).map(([k, s]) => ['style:' + k, s.name])]);
   const mine = Object.keys(myScenes()); if (mine.length) groups.push(['My scenes', mine.map(n => ['my:' + n, n])]);
   for (const [name, items] of groups){ const g = document.createElement('optgroup'); g.label = name;
     for (const [v, t] of items){ const o = document.createElement('option'); o.value = v; o.textContent = t; g.appendChild(o); }
@@ -93,6 +94,7 @@ presetSel.value = 'inc';
 syncGrey();
 function choosePreset(v){
   if (v.startsWith('my:')){ const sc = myScenes()[v.slice(3)]; if (!sc) return; applyScene(sc, v); $('#seeds').value = JSON.stringify(sc, null, 1); $('#scene-name').value = sc.name; }
+  else if (v.startsWith('style:')){ const sc = STYLE_SCENES[v.slice(6)]; if (!sc) return; applyScene(sc, v); $('#seeds').value = JSON.stringify(sc, null, 1); $('#scene-name').value = ''; }
   else applyPreset(v);
   if (E.started) log(`Preset: ${presetSel.selectedOptions[0].textContent}`);
 }
