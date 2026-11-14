@@ -5,7 +5,7 @@
    sample: the recorded instrument; synth: the stand-in voice until it has loaded; oct: register;
    pan: seat in the stereo field (left −1 … right +1), roughly orchestral. Colors group the families. */
 const SECTIONS = {
-  piano1:  {label:'Piano I',         role:'line', sample:'piano1',  synth:'pluck',   oct:0,  pan:-0.35, color:'#e0663a'},
+  piano1:  {label:'Piano',           role:'line', sample:'piano1',  synth:'pluck',   oct:0,  pan:-0.35, color:'#e0663a'},
   piano2:  {label:'Grand piano',     role:'line', sample:'piano2',  synth:'pluck',   oct:0,  pan:0.35,  color:'#c4532c'},
   organ:   {label:'Organ',           role:'line', sample:'organ',   synth:'reed',    oct:0,  pan:0,     color:'#a8642f', cut:1800},
   violins: {label:'Violins',         role:'line', sample:'violins', synth:'bowed',   oct:0,  pan:-0.6,  color:'#b8467a', cut:3500},

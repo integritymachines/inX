@@ -84,7 +84,7 @@ function playNote(key, m, t, dur, gain, bright){
     electroVoice(key, m, t, dur, 0.24*gain*Math.pow(10, (trim + ROLE_DB[spec.role])/20), bright, dest); return;
   }
   if (ge > 0.02){
-    const trim = ELECTRO_DB[key] ? clamp(ELECTRO_DB[key][dur > 0.32 ? 'long' : 'short'], beat ? -24 : -12, beat ? 24 : 12) : -8;
+    const trim = ELECTRO_DB[key] ? clamp(ELECTRO_DB[key][dur > 0.32 ? 'long' : 'short'], beat ? -14 : -12, beat ? 14 : 12) : -8;
     electroVoice(key, m, t, dur, 0.24*gain*ge*Math.pow(10, (trim + ROLE_DB[spec.role])/20), bright, dest);
   }
   if (ga < 0.02) return;

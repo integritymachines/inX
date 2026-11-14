@@ -42,6 +42,7 @@ function makeBass(type){
   const set = (i, o = {}) => Object.assign(L[i], {v:0.85}, o);
   if (type === 'rumble') for (let i=0;i<16;i++){ if (i % 4) set(i, {v:i % 4 === 2 ? 0.85 : 0.6}); }
   else if (type === 'house') [[2,0],[3,1],[6,0],[10,0],[11,1],[14,0]].forEach(([i, o]) => set(i, {oct:o}));
+  else if (type === 'octave') for (let i=0;i<16;i+=2) set(i, {oct:(i % 4 === 2) ? 1 : 0, v:i % 4 === 2 ? 0.7 : 0.85});   // the sequencer's octave-jumping eighths
   else if (type === 'acid') for (let i=0;i<16;i++){ if (Math.random() < 0.7 || i === 0) set(i, {tone:[0,0,0,1,2][Math.floor(Math.random()*5)], oct:Math.random() < 0.3 ? 1 : 0, acc:Math.random() < 0.3, slide:Math.random() < 0.22}); }
   else [2,3,6,10,11,14].forEach(i => set(i));
   return L;

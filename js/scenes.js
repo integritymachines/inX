@@ -113,4 +113,13 @@ const STYLE_SCENES = {
     players:['prophet','juno','polysix','ms20','moog','m1organ','piano1','congas'],
     seeds:[SN(6,[[0,1,62],[1,1,65],[2,1,69],[3,1,72],[4,1,69],[5,1,65]]), SN(8,[[0,4,50],[4,4,55]]), SN(4,[[0,2,74],[2,1,72],[3,1,69]]),
            SN(12,[[0,6,62],[6,6,60]]), SN(3,[[0,0.5,77],[0.5,0.5,76],[1,1,74],[2,1,72]]), SN(16,[[0,16,38]])]},
+  robotik: {inx:1, name:'Robotik (after Kraftwerk)', base:'techno',
+    settings:{X:0.85, bpm:116, composers:[], terry:1, pulse:0, stay:20, gap:32, wet:0.08, minN:3, maxN:8, evo:0.25,
+              mode:{scale:'aeolian', gridAll:true, flatten:0.6, surprise:0.2, peakDb:5},
+              kit:{kickDecay:0.3, kickPitch:[170, 52], hatDecay:0.025, openDecay:0.12, clap:'clap', bass:'octave', swing:0, pump:0.1, kick:'four',
+                   hatK:[14, 16], percK:[4, 6], elec:1, gains:{ohat:0.3, perc:1.0, bass:0.75}, prog:[0, 6, 5, 6], hold:4, pad:0.4, arp:0.5, arpRate:1, tape:0}},
+    players:['moog','m1organ','prophet','polysix','ms20','juno','glock','bells'],
+    seeds:[SN(4,[[0,0.5,57],[1,0.5,57],[2,0.5,69],[3,0.5,57]]), SN(8,[[0,1,76],[1,1,74],[2,1,72],[3,1,74],[4,2,76],[6,2,69]]),
+           SN(2,[[0,0.5,81],[0.5,0.5,76],[1,0.5,72],[1.5,0.5,76]]), SN(8,[[0,4,64],[4,4,67]]), SN(4,[[0,1,72],[2,1,71],[3,1,67]]),
+           SN(16,[[0,2,69],[4,2,72],[8,2,76],[12,4,74]])]},
 };

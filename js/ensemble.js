@@ -7,6 +7,15 @@ const E = {
   minN:2, maxN:12, excite:true, genMode:'v2', traffic:0.5, leaseMid:200, gap:30, pulseLevel:0.5, joinCooldown:0,
   seeds:null, seedNum:1964, flags:{}
 };
+/* In C lets a player take a pattern an octave up or down. With John's waves, going up follows the intensity and going
+   down belongs to the quiet stretches; without them, a player moves away from where it is (up or down) or back home.
+   The deepest instruments (double bass, tuba, Moog bass) don't go further down. */
+function setOctave(a){
+  const spec = SECTIONS[a.sec], canUp = spec.oct < 2, canDown = spec.oct > -2;
+  if (a.octUp || a.octDown){ a.octUp = false; a.octDown = false; return; }   // back to the home register
+  if (ST.wave){ const up = waveOctaveUp(a); if (up && canUp) a.octUp = true; else if (!up && canDown && E.I < 0.45 && Math.random() < 0.5) a.octDown = true; return; }
+  if (Math.random() < 0.5){ if (canUp) a.octUp = true; } else if (canDown) a.octDown = true;
+}
 function log(msg){ E.log.unshift({t:E.clock, msg}); if (E.log.length > 60) E.log.length = 60; }
 function once(key, msg){ if (E.flags[key]) return; E.flags[key] = true; log(msg); }
 
@@ -17,7 +26,7 @@ function makeAgent(manual, sec, idx, entryP){
     curStart:entryP, curLen:1, slot:null, rate:1, glass:null,
     pace:Math.exp(0.45*(Math.random() + Math.random() + Math.random() - 1.5)*2)};   // some players linger, some press on (about ×0.5–×2 dwell)
 }
-const STAY = {sec:60};   // average seconds on a pattern (set by the 'Stay per pattern' slider)
+const STAY = {sec:30};   // average seconds on a pattern (set by the 'Stay per pattern' slider)
 function setMinReps(a){ const P = E.gen.get(a.idx); const k = E.excite ? 0.45 + 1.1*P.ex : 1; a.minReps = Math.max(1, Math.round((a.pace || 1)*k*(STAY.sec/E.period)*(0.6 + 0.8*Math.random())/P.len)); }
 function active(){ return E.agents.filter(a => a.mode !== 'out' && !a.removed); }
 function stats(){
@@ -28,7 +37,7 @@ function name(a){ return SECTIONS[a.sec].label; }
 
 function advance(a){
   a.idx++; a.reps = 0; setMinReps(a);
-  if (Math.random() < ST.octaveProb*(ST.wave ? ST.wave.octave : 1)) a.octUp = waveOctaveUp(a) && SECTIONS[a.sec].oct < 2;
+  if (Math.random() < ST.octaveProb*(ST.wave ? ST.wave.octave : 1)) setOctave(a);
 }
 function leave(a, why){
   if (phaseActive(a)) endPhase(E.p, null);
@@ -51,7 +60,7 @@ function flowStep(a, p, S){
   if (a.fade < 1 && !(E.gather && E.gather.dropping)) a.fade = Math.min(1, a.fade + 0.1);
   if (E.phase && !ST.phase) endPhase(p, 'Phasing stops');
   if (phaseActive(a)){ if (a === E.phase.fol) phaseStep(a, p); return; }   // the pair holds its pattern while phasing
-  if (ST.wave && Math.random() < 0.12) a.octUp = waveOctaveUp(a) && SECTIONS[a.sec].oct < 2;   // register follows the wave
+  if (ST.wave && Math.random() < 0.12) setOctave(a);   // register follows the wave
   if (a.glass && !ST.glass) a.glass = null;
   if (a.glass){ glassStep(a); return; }                                     // holds its pattern while it grows and shrinks
   const G = E.gather;
@@ -142,7 +151,7 @@ function goSolo(a, p){
   E.gather = null; if (PENDING_STYLE) applyStyle(PENDING_STYLE, true);
   for (const x of E.agents) if (x.mode === 'out') x.T = T;
   a.idx = T+1; a.reps = 0; setMinReps(a);
-  a.fade = Math.max(a.fade, 0.5); a.lastT = T+1; E.lastT = T+1; a.octUp = false; a.resting = false;
+  a.fade = Math.max(a.fade, 0.5); a.lastT = T+1; E.lastT = T+1; a.octUp = false; a.octDown = false; a.resting = false;
   log(`${name(a)} plays on alone into section ${E.gen.epoch + 1} (${keyName(E.gen.s)})`);
 }
 /* Players who sat out the drop come back once the solo has had its moment. */
@@ -172,7 +181,7 @@ function reenter(a, p){
   a.mode = 'flow'; a.idx = S.act.length ? Math.max(a.T + 1, E.gen.themeAt, S.med) : Math.max(a.T + 1, E.lastT); a.reps = 0;
   if (S.act.length && a.idx > S.lo + SPREAD - 1) a.idx = Math.max(a.T + 1, S.med);
   E.gen.get(a.idx); setMinReps(a);
-  a.fade = 0.6; a.lastT = E.lastT; a.octUp = false;
+  a.fade = 0.6; a.lastT = E.lastT; a.octUp = false; a.octDown = false;
   a.resting = false; a.skip = true; a.nextStart = snapUp(p + 1);
 }
 function climaxX(pn){ const C = E.gather && E.gather.climax; return C && !E.gather.dropping ? clamp((pn - C.start)/(C.end - C.start), 0, 1) : null; }
@@ -197,7 +206,7 @@ function play(a, q, tq){
   if (a.filled) P = fillNotes(P);
   if (!E.audio || !ctx) return;
   const wg = formGain(), br = waveBright();
-  const spec = SECTIONS[a.sec], sh = 12*(spec.oct + (a.octUp ? 1 : 0)), per = perPulse(a);
+  const spec = SECTIONS[a.sec], sh = 12*(spec.oct + (a.octUp ? 1 : 0) - (a.octDown ? 1 : 0)), per = perPulse(a);
   for (let k=0;k<P.notes.length;k++){
     const n = P.notes[k];
     const g = gainOf(a, Math.round(q) + n.o)*wg*(a.filled && !n.acc ? 0.8 : 1);
