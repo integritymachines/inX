@@ -356,6 +356,7 @@ function pulse(t){
   gatherTick(p);
   dynamicsStep();
   technoPulse(p, t);
+  elecPulse(p, t);
   const opening = E.clock < (E.openUntil || 0);
   const pulseFade = opening ? 1 : 1 - smooth(0.3, 0.45, TECHNO.X);   // the hats take over from the pulse
   if (E.audio && ctx && E.pulseLevel > 0 && pulseFade > 0.01 && p % PPE === 0){   // the pulse stays in eighth notes

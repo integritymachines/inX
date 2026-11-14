@@ -49,7 +49,7 @@ function makeBass(type){
 function initTechno(){
   const K = kit();
   TECHNO.pat = {
-    kick: K.halftime ? [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0] : [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+    kick: kickPattern(K) || [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
     hat:  hatPattern(Math.round((K.hatK[0] + K.hatK[1])/2)),
     clap: K.halftime ? [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0] : [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
     ohat: [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
@@ -76,7 +76,8 @@ function newGroove(){
   TECHNO.bassLine = makeBass(K.bass); B.bass = TECHNO.bassLine.map(x => x.v);
   const oh = r();
   B.ohat = oh < 0.55 ? [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0] : oh < 0.8 ? [0,0,1,0, 0,0,1,0.5, 0,0,1,0, 0,0,1,0.5] : [0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,0,0];
-  if (!K.halftime){ B.kick = [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]; if (r() < 0.25) B.kick[15] = 0.5; if (r() < 0.15) B.kick[10] = 0.45; }
+  const kp = kickPattern(K, r); if (kp) B.kick = kp;
+  else { B.kick = [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]; if (r() < 0.25) B.kick[15] = 0.5; if (r() < 0.15) B.kick[10] = 0.45; }
   if (E.started) log('New groove for the new section');
 }
 /* One bar of drums: the base groove, thinned or filled by intensity, with ghost notes, and a fill in the last bar of a phrase. */
@@ -130,8 +131,9 @@ function evolveDrums(){
 function bassMidi(tone = 0, oct = 0){
   const S = stats(); const P = S.act.length ? E.gen.pats[S.hi] : null;
   if (!P || !P.fn) return 33 + 12*oct;
-  const t = mod(7*P.s, 12), kd = Math.max(0, P.f.findIndex(v => mod(v, 12) === t));
-  const deg = mod(kd + FN_OFF[P.fn] + 2*tone, 7);
+  const t = mod(7*P.s, 12), kd = mod(Math.max(0, P.f.findIndex(v => mod(v, 12) === t)) + modeOff(), 7);   // the mode's own tonic
+  const fnOff = typeof elecOn === 'function' && elecOn() ? elecChordDeg() : FN_OFF[P.fn];   // electronica: the bass follows the held chord loop
+  const deg = mod(kd + fnOff + 2*tone, 7);
   let m = E.gen.midiOf(deg, P.f) - 24; while (m > 45) m -= 12; while (m < 33) m += 12;
   return m + 12*oct;
 }

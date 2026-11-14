@@ -86,7 +86,8 @@ function initAudio(){
   analyser = ctx.createAnalyser(); analyser.fftSize = 1024;
   lim.connect(analyser); analyser.connect(ctx.destination);
   // players → music (loudness control) → duck (sidechain) → bus; drums → drumBus → bus
-  duck = ctx.createGain(); duck.connect(bus);
+  duck = ctx.createGain();
+  const tape = ctx.createWaveShaper(); tape.oversample = '2x'; duck.connect(tape); tape.connect(bus); ELEC.tape = tape; setTape(kit().tape);   // tape saturation (electronica)
   mlp = ctx.createBiquadFilter(); mlp.type = 'lowpass'; mlp.frequency.value = 20000; mlp.Q.value = 0.9; mlp.connect(duck);   // the techno build's filter
   music = ctx.createGain(); music.connect(mlp);
   drumBus = ctx.createGain(); drumBus.gain.value = 0.3; drumBus.connect(bus);

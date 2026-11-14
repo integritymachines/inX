@@ -89,6 +89,7 @@ function applyPresetObject(P, key){
   if (P.players) fixEnsemble(P.players); else if (FIXED) releaseEnsemble();
   RAMP = P.ramp ? {from:P, to:PRESETS[P.ramp.to], sec:P.ramp.sec, t0:null, done:false, called:false} : null;
   if (E.gen) initTechno();
+  if (typeof setTape === 'function') setTape(kit().tape);
   if (typeof onPresetApplied === 'function') onPresetApplied(P);
 }
 /* Focus: start high (fast, driving, an early full climax), then glide every setting into the steady Productive settings over the ramp's length. */

@@ -1,10 +1,10 @@
 'use strict';
 /* Score layer: the evolving pattern stream. */
 /* ---------------- Pattern generator ---------------- */
-const FN_OFF = {I:0, ii:1, iii:2, IV:3, V:4, vi:5};
+const FN_OFF = {I:0, ii:1, iii:2, IV:3, V:4, vi:5, vii:6};
 const PROG = {   // likely next chord, by function
   I:{IV:3, V:2, vi:3, ii:1, iii:1}, ii:{V:4, vi:1, IV:1, iii:1}, iii:{vi:3, IV:2, ii:1},
-  IV:{I:2, V:3, ii:2, vi:1}, V:{I:4, vi:2, iii:1, IV:1}, vi:{ii:3, IV:3, V:1, iii:1, I:1}
+  IV:{I:2, V:3, ii:2, vi:1}, V:{I:4, vi:2, iii:1, IV:1}, vi:{ii:3, IV:3, V:1, iii:1, I:1}, vii:{I:3, iii:1}
 };
 class Gen {
   constructor(seed, seeds){
@@ -39,6 +39,9 @@ class Gen {
   regionStep(i){
     const forbid = this.trans ? this.trans.j : -1;
     const bad = fn => forbid >= 0 && this.chordDegs(fn).includes(forbid);
+    if (this.mode === 'v2' && typeof elecOn === 'function' && elecOn()){   // electronica: the chord loop, held for bars
+      const fn = elecChordFn(); if (!bad(fn)){ this.reg.fn = fn; this.reg.left = 1; return; }
+    }
     if (this.mode === 'v2'){
       // harmony by arc: the tonic through the opening, chords moving faster toward the build, the dominant held before the climax
       const a = this.arcAt(i);
