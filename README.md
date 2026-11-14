@@ -15,6 +15,8 @@ python3 -m http.server 8765
 
 Press **Start**. The page has three screens, one below the other: the dashboard you play from, **Setup** (which instruments are on stage, and the seed patterns), and **Notes**, which explain every control. The preset menu lists general scenes, then Berlin clubs (Berghain, Panorama Bar, Wilde Renate, Tresor, KitKat, Kater Blau, Club der Visionäre, Sisyphos), then the modes; *Middle* and *Random* are neutral and random starting points.
 
+A **scene** (Setup screen) is one JSON object holding seed patterns, settings and line-up: write one by hand, copy the running settings into one, save it as a file (and in the browser, under *My scenes*), or open one. The notes list every field.
+
 ## How it works
 
 - **Patterns.** A seeded generator breeds new patterns from earlier ones (mutation, crossover, occasional new material) and picks each from 18 candidates for chord fit, complexity near a target, and kinship with its parent and with the section's theme. Pattern lengths follow In C's spread (median 6 eighths, up to 64); the pulse is a sixteenth note, so short cells can move in sixteenths while every pattern lasts whole eighths.

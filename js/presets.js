@@ -74,6 +74,9 @@ function randomPreset(){
 }
 function applyPreset(key){
   const P = key === 'random' ? randomPreset() : PRESETS[key]; if (!P) return;
+  applyPresetObject(P, key);
+}
+function applyPresetObject(P, key){
   PRESET_KEY = key;
   TECHNO.kit = P.kit ? Object.assign({}, KIT_DEFAULT, P.kit, {gains:Object.assign({}, P.kit.gains || {})}) : null;
   if (P.bpm) TECHNO.userPeriod = 60/(4*P.bpm);

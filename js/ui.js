@@ -79,14 +79,26 @@ function syncGrey(){
   set('#philip', TECH_ON.glass); set('#steve', TECH_ON.reich); set('#john', TECH_ON.adams); set('#lamonte', TECH_ON.young); set('#evo', TECHNO.X >= 0.2);
 }
 const presetSel = $('#preset');
-for (const [name, keys] of PRESET_GROUPS){ const g = document.createElement('optgroup'); g.label = name;
-  for (const k of keys){ const o = document.createElement('option'); o.value = k; o.textContent = k === 'random' ? 'Random' : PRESETS[k].label.replace(' (ADHD)', ''); g.appendChild(o); }
-  presetSel.appendChild(g); }
+function buildPresetMenu(){
+  const cur = presetSel.value; presetSel.innerHTML = '';
+  const groups = PRESET_GROUPS.map(([name, keys]) => [name, keys.map(k => [k, k === 'random' ? 'Random' : PRESETS[k].label.replace(' (ADHD)', '')])]);
+  const mine = Object.keys(myScenes()); if (mine.length) groups.push(['My scenes', mine.map(n => ['my:' + n, n])]);
+  for (const [name, items] of groups){ const g = document.createElement('optgroup'); g.label = name;
+    for (const [v, t] of items){ const o = document.createElement('option'); o.value = v; o.textContent = t; g.appendChild(o); }
+    presetSel.appendChild(g); }
+  if (cur && [...presetSel.options].some(o => o.value === cur)) presetSel.value = cur;
+}
+buildPresetMenu();
 presetSel.value = 'inc';
 syncGrey();
-presetSel.addEventListener('change', () => { applyPreset(presetSel.value); if (E.started) log(`Preset: ${presetSel.selectedOptions[0].textContent}`); });
+function choosePreset(v){
+  if (v.startsWith('my:')){ const sc = myScenes()[v.slice(3)]; if (!sc) return; applyScene(sc, v); $('#seeds').value = JSON.stringify(sc, null, 1); $('#scene-name').value = sc.name; }
+  else applyPreset(v);
+  if (E.started) log(`Preset: ${presetSel.selectedOptions[0].textContent}`);
+}
+presetSel.addEventListener('change', () => choosePreset(presetSel.value));
 // choosing the shown preset again (e.g. Random for a new draw) needs a click on the menu: the select fires no change for the same value, so offer a re-apply on double-click
-presetSel.addEventListener('dblclick', () => applyPreset(presetSel.value));
+presetSel.addEventListener('dblclick', () => choosePreset(presetSel.value));
 function onPresetApplied(P){
   presetQuiet = true;
   setRange('#techno', Math.round(P.X*100)); syncTempo();
@@ -105,11 +117,45 @@ bindRange('#lease', v => { E.leaseMid = v; $('#lease-o').textContent = `${Math.r
 bindRange('#pulse', v => { E.pulseLevel = v/100; $('#pulse-o').textContent = v ? `${v}%` : 'off'; });
 $('#reseed').addEventListener('click', () => {
   try {
-    E.seeds = parseSeeds($('#seeds').value);
-    E.seedNum = (parseInt($('#seed').value, 10) || 0) >>> 0;
+    const sc = JSON.parse($('#seeds').value);
+    const num = (parseInt($('#seed').value, 10) || 0) >>> 0;
+    if (Array.isArray(sc)) applyScene({seeds:sc, seed:num}); else applyScene(Object.assign({seed:num}, sc));
     $('#seed-err').textContent = '';
-    if (E.started) reset();
   } catch (e) { $('#seed-err').textContent = e.message; }
+});
+$('#scene-copy').addEventListener('click', () => {
+  const sc = currentScene($('#scene-name').value.trim() || undefined);
+  $('#seeds').value = JSON.stringify(sc, null, 1); $('#seed-err').textContent = '';
+});
+function sceneFromField(){
+  let sc = JSON.parse($('#seeds').value); if (Array.isArray(sc)) sc = Object.assign(currentScene(), {seeds:sc});
+  const nm = $('#scene-name').value.trim(); if (nm) sc.name = nm; if (!sc.name) sc.name = 'My scene';
+  sc.inx = 1; return sc;
+}
+$('#scene-save').addEventListener('click', () => {
+  try {
+    const sc = sceneFromField();
+    const kept = storeScene(sc); buildPresetMenu(); presetSel.value = 'my:' + sc.name;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(sc, null, 1)], {type:'application/json'}));
+    a.download = sc.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '.inx.json'; document.body.appendChild(a); a.click(); a.remove();
+    $('#seed-err').textContent = kept ? `Saved “${sc.name}”: downloaded, and kept under My scenes.` : `Saved “${sc.name}” as a download (this browser can't keep it).`;
+  } catch (e) { $('#seed-err').textContent = e.message; }
+});
+$('#scene-open').addEventListener('click', () => $('#scene-file').click());
+$('#scene-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const text = await f.text(), sc = JSON.parse(text);
+    $('#seeds').value = JSON.stringify(sc, null, 1); if (sc.name) $('#scene-name').value = sc.name;
+    applyScene(sc, sc.name ? 'my:' + sc.name : 'scene');
+    if (sc.name && !Array.isArray(sc)){ storeScene(sc); buildPresetMenu(); presetSel.value = 'my:' + sc.name; }
+    $('#seed-err').textContent = `Opened “${sc.name || f.name}”.`;
+  } catch (err) { $('#seed-err').textContent = err.message; }
+  e.target.value = '';
+});
+$('#scene-forget').addEventListener('click', () => {
+  const v = presetSel.value; if (!v.startsWith('my:')){ $('#seed-err').textContent = 'Choose one of My scenes in the preset menu first.'; return; }
+  forgetScene(v.slice(3)); buildPresetMenu(); $('#seed-err').textContent = `Forgot “${v.slice(3)}”.`;
 });
 
 function phaseOf(){
