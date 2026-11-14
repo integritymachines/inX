@@ -22,7 +22,12 @@ const ELECTRO = {
   moog:{type:'moog', bright:1}, ms20:{type:'ms20', bright:1}, juno:{type:'juno', bright:1, wave:'pulse'}, polysix:{type:'juno', bright:0.8, wave:'square'},
   prophet:{type:'brass', bright:1.15}, m1organ:{type:'m1organ', bright:1},
   saron:{type:'metal', ratios:[1, 2.76, 5.4, 8.93], amps:[1, 0.5, 0.25, 0.12], decay:1.4, beat:6},
-  gender:{type:'metal', ratios:[1, 3.9, 9.6], amps:[1, 0.18, 0.06], decay:3.2, beat:4}
+  gender:{type:'metal', ratios:[1, 3.9, 9.6], amps:[1, 0.18, 0.06], decay:3.2, beat:4},
+  psalbow:{type:'pad', bright:1.1}, psalpl:{type:'pluck', bright:1.2}, renorgan:{type:'pad', bright:0.8},
+  sopreco:{type:'lead', bright:1.0, wave:'triangle'}, bassreco:{type:'lead', bright:0.7, wave:'triangle'}, folkharp:{type:'pluck', bright:1.0},
+  chimes:{type:'fm', ratio:1.41, index:2, decay:1.8}, medperc:{type:'click'},
+  lute:{type:'lute', bright:1}, hurdy:{type:'hurdy', bright:1}, shawm:{type:'reedy', bright:1.2, formants:[1100, 2700], wave:'sawtooth'},
+  crumhorn:{type:'reedy', bright:0.8, formants:[700, 1600], wave:'square'}, bagpipe:{type:'reedy', bright:1.1, formants:[1400, 3000], wave:'pulse', drone:true}
 };
 let PULSE_WAVE = null;
 function pulseWave(c){
@@ -101,6 +106,25 @@ function electroVoice(key, m, t, dur, vel, bright, dest){
         pg.gain.setValueAtTime(0.0001, t); pg.gain.exponentialRampToValueAtTime(a, t + 0.004); pg.gain.exponentialRampToValueAtTime(0.0001, t + d);
       });
       end = t + D; break; }
+    case 'lute': {   // gut strings plucked: a bright attack fading to a soft, round tone
+      const F = lp(3800*b, 1.2); F.frequency.setValueAtTime(Math.min(16000, 4200*b), t); F.frequency.exponentialRampToValueAtTime(700, t + 0.35);
+      osc('triangle', f, 0, 0.6, F); osc('sawtooth', f, 4, 0.25, F); osc('triangle', f*2, -3, 0.12, F);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1 + Math.min(dur, 0.4)); end = t + 1.15 + Math.min(dur, 0.4); break; }
+    case 'hurdy': {   // a wheel-bowed melody string over the drones (tonic and fifth of the key in force), with the buzzing bridge
+      const F = lp(3200*b, 1); const body = c.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 1150; body.gain.value = 8; body.Q.value = 1.5; body.connect(F);
+      osc('sawtooth', f, -4, 0.4, body); osc('sawtooth', f, 4, 0.3, body);
+      const hp = c.createBiquadFilter(), bg = c.createGain(); hp.type = 'highpass'; hp.frequency.value = 1800; bg.gain.value = 0.06; hp.connect(bg); bg.connect(F); osc('square', f, 0, 0.5, hp);
+      const am = c.createOscillator(), ag = c.createGain(); am.frequency.value = 8; ag.gain.value = 0.06; am.connect(ag); ag.connect(bg.gain); oscs.push(am);   // the rattling 'dog' of the buzzing bridge
+      const dr = tunedHz(36 + TUNE_TONIC), D = lp(900, 0.7); osc('sawtooth', dr, 0, 0.14, D); osc('sawtooth', dr*1.5, 0, 0.09, D);
+      end = adsr(0.04, 0.1, 0.85, 0.12); break; }
+    case 'reedy': {   // double reeds: a buzzy wave shaped by two resonances (shawm: wide and bright; crumhorn: capped and nasal)
+      const F = lp(5200*b, 0.7);
+      for (const fr of P.formants){ const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = fr; bp.Q.value = 3; bp.connect(F);
+        osc(P.wave, f, 0, 0.6, bp); }
+      osc(P.wave, f, 3, 0.18, F);
+      if (P.drone){ const dr = tunedHz(36 + TUNE_TONIC), D = lp(1400, 0.7); osc('sawtooth', dr, 0, 0.12, D); osc('sawtooth', dr*2, 0, 0.07, D); }
+      const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 5; lg.gain.value = 0.04*vel; lfo.connect(lg); lg.connect(g.gain); oscs.push(lfo);   // breath tremolo
+      end = adsr(0.018, 0.06, 0.9, 0.06); break; }
     case 'tom': { const o = osc('sine', f*1.6, 0, 1, g); o.frequency.setValueAtTime(f*1.6, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.07);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35); end = t + 0.36; break; }
     case 'click': {   // unpitched: register picks the colour

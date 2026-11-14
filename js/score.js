@@ -33,7 +33,8 @@ class Gen {
     return rel ? new Set(rel.map(r => mod(kd + r, 7))) : null;
   }
   /* ---- Harmonic regions: a slow chord progression within the key (In C's implied harmonies). ---- */
-  keyDeg(){ const t = mod(7*this.s, 12); const j = this.f.findIndex(v => mod(v, 12) === t); return j < 0 ? 0 : j; }
+  // the tonic's scale degree: the major key's tonic, moved up by the mode (Dorian starts on the 2nd degree, Mixolydian on the 5th…)
+  keyDeg(){ const t = mod(7*this.s, 12); const j = this.f.findIndex(v => mod(v, 12) === t); return mod((j < 0 ? 0 : j) + modeOff(), 7); }
   chordDegs(fn){ const r = mod(this.keyDeg() + FN_OFF[fn], 7); return [r, mod(r+2, 7), mod(r+4, 7)]; }
   regionStep(i){
     const forbid = this.trans ? this.trans.j : -1;

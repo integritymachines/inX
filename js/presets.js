@@ -5,7 +5,7 @@
 /* Mode settings beyond the sliders, set by presets: how high a gathering's climax rises (dB), how much surprise the stream
    carries (0–1: new material, how far keys may jump), whether every player locks to the 4/4 grid, and how much of
    Terry's slow level shaping is flattened out (0–1). */
-const MODE_DEFAULT = {peakDb:7, surprise:0.5, gridAll:false, flatten:0};
+const MODE_DEFAULT = {peakDb:7, surprise:0.5, gridAll:false, flatten:0, tuning:null, scale:null};
 // fixed ensembles, balanced across foundation, line and color
 const STEADY_PLAYERS = ['bass','cellos','piano1','violins','flute','clarinet','marimba','harp'];
 const DRIVE_PLAYERS = ['bass','cellos','timpani','piano1','piano2','violins','trumpet','sax','flute','clarinet','marimba','xylo','handperc','harp'];
@@ -50,10 +50,15 @@ const PRESETS = {
 let PRESET_KEY = 'inc';
 /* Menu order: general scenes, then Berlin clubs, then the modes. */
 const PRESET_GROUPS = [
-  ['Scenes', ['inc', 'minimal', 'techno', 'acid', 'house', 'chillwave', 'middle', 'random']],
+  ['Scenes', ['inc', 'minimal', 'notredame', 'techno', 'acid', 'house', 'chillwave', 'middle', 'random']],
   ['Berlin clubs', ['berghain', 'panorama', 'renate', 'tresor', 'kitkat', 'katerblau', 'visionaere', 'sisyphos']],
   ['Modes (ADHD)', ['productive', 'creative', 'focus']],
 ];
+/* Notre-Dame: after Pérotin's organum (about 1200), minimalism's distant ancestor: a drone under slowly repeating upper voices,
+   Pythagorean tuning (pure fifths) in the Dorian mode, a medieval band in a stone nave. */
+PRESETS.notredame = {label:'Notre-Dame (medieval)', stay:75, X:0, pulseMs:450, composers:['young'], terry:3, pulse:0,
+  players:['renorgan','psalbow','hurdy','bassreco','sopreco','crumhorn','shawm','lute','folkharp','chimes','medperc'],
+  minN:2, maxN:11, gap:40, wet:0.48, john:0.4, drone:0.7, evo:0.3, mode:{tuning:'pyth', scale:'dorian', peakDb:4, surprise:0.3}};
 /* Middle: every control at the middle of its range, all composers on at half depth. */
 PRESETS.middle = {label:'Middle', stay:24, X:0.5, bpm:120, composers:['glass','reich','adams','young'], terry:4, pulse:0.5, philip:0.5, steve:0.5,
                   minN:3, maxN:12, gap:64, wet:0.28, john:0.5, drone:0.5, evo:0.5, kit:{elec:0.5, gains:{}}};

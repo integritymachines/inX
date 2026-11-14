@@ -2,6 +2,11 @@
 /* Shared helpers and seed material. */
 const mod = (a, n) => ((a % n) + n) % n;
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const MODES = {ionian:0, dorian:1, phrygian:2, lydian:3, mixolydian:4, aeolian:5};
+const MODE_STEPS = [0, 2, 4, 5, 7, 9, 11];
+function modeOff(){ return typeof MODE !== 'undefined' && MODE.scale ? MODES[MODE.scale] || 0 : 0; }
+/* pitch class of the tonic for a key with s sharps (negative: flats), in the current mode */
+function tonicPc(s){ return mod(7*s + MODE_STEPS[modeOff()], 12); }
 const PPE = 2;   // pulses per eighth note: the pulse is a sixteenth, so In C's fast cells fit
 
 function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }

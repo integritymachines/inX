@@ -4,7 +4,11 @@
 const $ = s => document.querySelector(s);
 const SHARP_KEYS = ['C','G','D','A','E','B','F♯','C♯','G♯','D♯'];
 const FLAT_KEYS = ['C','F','B♭','E♭','A♭','D♭','G♭','C♭','F♭','B♭♭'];
-function keyName(s){ return (s >= 0 ? SHARP_KEYS[Math.min(s, 9)] : FLAT_KEYS[Math.min(-s, 9)]) + ' major'; }
+const PC_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'], PC_FLAT = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+function keyName(s){
+  if (!modeOff()) return (s >= 0 ? SHARP_KEYS[Math.min(s, 9)] : FLAT_KEYS[Math.min(-s, 9)]) + ' major';
+  const pc = tonicPc(s); return `${(s >= 0 ? PC_SHARP : PC_FLAT)[pc]} ${MODE.scale[0].toUpperCase() + MODE.scale.slice(1)}`;
+}
 const mmss = t => { const s = Math.floor(t); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
 
 $('#seeds').value = JSON.stringify(JSON.parse(DEFAULT_SEEDS_JSON), null, 0).replace(/\},\{/g, '},\n{');
@@ -267,6 +271,7 @@ const FAMILIES = [
   ['Brass', ['horn', 'trumpet', 'trombone', 'tuba']],
   ['Mallets & bells', ['marimba', 'xylo', 'glock', 'vibes', 'tubular']],
   ['World', ['kalimba', 'mbira', 'balafon', 'dantranh', 'saron', 'gender']],
+  ['Medieval', ['psalbow', 'psalpl', 'renorgan', 'folkharp', 'lute', 'hurdy', 'shawm', 'crumhorn', 'bagpipe', 'sopreco', 'bassreco', 'chimes', 'medperc']],
   ['Synthesizers', ['moog', 'm1organ', 'ms20', 'juno', 'polysix', 'prophet']],
   ['Percussion', ['timpani', 'handperc', 'congas', 'darbuka', 'bells']],
 ];

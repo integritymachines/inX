@@ -5,21 +5,24 @@
    with a 7/4 natural seventh in place of the minor seventh. At a key change the whole ensemble retunes in one clean step.
    A drone (Young) sounds the tonic with its fifth, octave, twelfth and natural seventh, and moves with the key. */
 const JI = [1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2, 8/5, 5/3, 7/4, 15/8];
+// Pythagorean: every interval built from pure fifths (3/2), as medieval theory had it: pure fifths and fourths, wide thirds
+const PYTH = [1, 256/243, 9/8, 32/27, 81/64, 4/3, 729/512, 3/2, 128/81, 27/16, 16/9, 243/128];
 let TUNE_TONIC = 0, DRONE = null;
 const LAMONTE = {drone:0.5};   // drone level (0–1; 0.5 is the original setting); at 0 the just intonation stays, the drone is silent
 function initTuning(){ TUNE_TONIC = 0; }
 function etHz(m){ return 440*Math.pow(2, (m - 69)/12); }
 function tunedHz(m){
-  if (ST.tuning !== 'ji') return etHz(m);
+  const tun = MODE.tuning || ST.tuning;
+  if (tun !== 'ji' && tun !== 'pyth') return etHz(m);
   const rel = mod(Math.round(m) - TUNE_TONIC, 12);
-  return etHz(Math.round(m) - rel)*JI[rel];
+  return etHz(Math.round(m) - rel)*(tun === 'pyth' ? PYTH : JI)[rel];
 }
 /* The key in force is the key of the newest pattern in play. */
 function updateTuning(){
   const S = stats(); if (!S.act.length || !E.gen) return;
   const top = E.gen.pats[S.hi]; if (!top) return;
-  const t = mod(7*top.s, 12);
-  if (t !== TUNE_TONIC){ TUNE_TONIC = t; if (ST.tuning === 'ji' || ST.drone) log(`Retuned to ${keyName(top.s).replace(' major', '')}`); }
+  const t = tonicPc(top.s);
+  if (t !== TUNE_TONIC){ TUNE_TONIC = t; if (ST.tuning === 'ji' || MODE.tuning || ST.drone) log(`Retuned to ${keyName(top.s).replace(' major', '')}`); }
 }
 function droneTick(){
   if (!ctx || !E.audio) return;
@@ -32,7 +35,8 @@ function droneStart(pc){
   const f0 = etHz(36 + pc), now = ctx.currentTime;
   const g = ctx.createGain(); g.gain.value = 0; g.connect(duck || bus);
   const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800; lp.connect(g);
-  const oscs = ST.drone.partials.map(([ratio, amp, type]) => {
+  const oscs = ST.drone.partials.filter(([ratio]) => !(MODE.tuning === 'pyth' && ratio === 3.5))   // no natural seventh in Pythagorean tuning
+    .map(([ratio, amp, type]) => {
     const o = ctx.createOscillator(); o.type = type; o.frequency.value = f0*ratio;
     const a = ctx.createGain(); a.gain.value = amp; o.connect(a); a.connect(lp); o.start(now); return o;
   });

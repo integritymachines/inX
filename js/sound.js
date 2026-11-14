@@ -50,7 +50,21 @@ const SECTIONS = {
   prophet: {label:'Prophet brass',   role:'line', sample:null, synthOnly:true, synth:'brass', oct:0,  pan:-0.45, color:'#8f6a3d'},
   m1organ: {label:'M1 organ bass',   role:'foundation', sample:null, synthOnly:true, synth:'bass', oct:-1, pan:0.1, color:'#6a3d8f'},
   saron:   {label:'Saron (gamelan)', role:'line', sample:null, synthOnly:true, synth:'mallet', oct:0, pan:-0.2,  color:'#b08a2e'},
-  gender:  {label:'Gendèr (gamelan)', role:'color', sample:null, synthOnly:true, synth:'mallet', oct:0, pan:0.25, color:'#8a6d2e'}
+  gender:  {label:'Gendèr (gamelan)', role:'color', sample:null, synthOnly:true, synth:'mallet', oct:0, pan:0.25, color:'#8a6d2e'},
+  // medieval: recorded (VCSL) and synthesized
+  psalbow: {label:'Psaltery (bowed)', role:'line', sample:'psalbow', synth:'bowed',  oct:0,  pan:-0.3,  color:'#9b6b8f'},
+  psalpl:  {label:'Psaltery (plucked)', role:'color', sample:'psalpl', synth:'pluck', oct:0,  pan:0.35,  color:'#b07aa0'},
+  renorgan:{label:'Renaissance organ', role:'line', sample:'renorgan', synth:'reed', oct:0,  pan:0.05,  color:'#8a5a2f', cut:2200},
+  sopreco: {label:'Soprano recorder', role:'color', sample:'sopreco', synth:'flute', oct:1,  pan:-0.45, color:'#4fb39a'},
+  bassreco:{label:'Bass recorder',    role:'foundation', sample:'bassreco', synth:'flute', oct:-1, pan:0.4, color:'#2f7a68'},
+  folkharp:{label:'Folk harp',        role:'color', sample:'folkharp', synth:'pluck', oct:0,  pan:-0.65, color:'#c77a9a'},
+  chimes:  {label:'Hand chimes',      role:'color', sample:'chimes',  synth:'mallet', oct:1,  pan:0.5,   color:'#8f9bd6'},
+  medperc: {label:'Tabor & bells',    role:'beat', sample:'medperc', synth:'perc',   oct:0,  pan:-0.15, color:'#9a7d5a'},
+  lute:    {label:'Lute',             role:'line', sample:null, synthOnly:true, synth:'pluck', oct:0,  pan:0.55,  color:'#a8763a'},
+  hurdy:   {label:'Hurdy-gurdy',      role:'line', sample:null, synthOnly:true, synth:'bowed', oct:0,  pan:-0.2,  color:'#7a5c3a'},
+  shawm:   {label:'Shawm',            role:'line', sample:null, synthOnly:true, synth:'reed',  oct:0,  pan:0.25,  color:'#a85a3a'},
+  crumhorn:{label:'Crumhorn',         role:'line', sample:null, synthOnly:true, synth:'reed',  oct:-1, pan:-0.35, color:'#8a6a3a'},
+  bagpipe: {label:'Bagpipe',          role:'line', sample:null, synthOnly:true, synth:'reed',  oct:0,  pan:0.15,  color:'#6a7a3a'}
 };
 for (const k in SECTIONS) SECTIONS[k].key = k;
 const ROLES = ['foundation', 'line', 'color', 'beat'];
