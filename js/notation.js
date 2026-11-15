@@ -133,6 +133,10 @@ function engrave(pats, opts){
         const lab = String(P.i), bw = 6.6*lab.length + 8;
         svg += `<g class="num${live ? ' live' : ''}${dim}"><rect x="${x0.toFixed(1)}" y="${(ny - 3.4*SP).toFixed(1)}" width="${bw}" height="${2.2*SP}" rx="2"/>`
              + `<text x="${(x0 + 4).toFixed(1)}" y="${(ny - 1.75*SP).toFixed(1)}">${lab}</text></g>`;
+        // a dot for each player on this pattern, as under the roll
+        (opts.players ? opts.players(P.i) : []).forEach((a, j) => {
+          svg += `<circle cx="${(x0 + bw + 6 + j*8).toFixed(1)}" cy="${(ny - 2.3*SP).toFixed(1)}" r="3" fill="${SECTIONS[a.sec].color}"${a.resting ? ' opacity="0.35"' : ''}/>`;
+        });
       }
       // beam groups: consecutive eighths/sixteenths within a beat
       const groups = []; let g = null;
@@ -215,16 +219,17 @@ function engrave(pats, opts){
 }
 
 /* the panel: patterns in play (and the next one, faded), redrawn only when that set changes */
-function drawNotation(lo, hi){
+function drawNotation(lo, hi, act){
   const el = NOTATION.el; if (!NOTATION.on || !el) return;
-  if (!E.gen){ if (NOTATION.key !== 'idle'){ NOTATION.key = 'idle'; el.innerHTML = '<p class="hint">The patterns in play will appear here in staff notation.</p>'; } return; }
+  if (!E.gen){ if (NOTATION.key !== 'idle'){ NOTATION.key = 'idle'; el.innerHTML = '<p class="hint">Press "Start listening". The patterns in play will appear here in staff notation.</p>'; } return; }
   const to = Math.min(hi + 1, E.gen.pats.length - 1), pats = [];
   for (let i = Math.max(0, lo); i <= to; i++) if (E.gen.pats[i]) pats.push(E.gen.pats[i]);
   if (!pats.length) return;
   const w = Math.floor(el.clientWidth), all = pats.flatMap(P => P.midi).sort((a, b) => a - b);
   const bass = all.length && all[all.length >> 1] < 55;
-  const key = `${lo},${hi},${to},${w},${bass},${pats.map(P => P.len + ':' + P.notes.length).join('.')}`;
+  const who = {}; for (const a of act || []) (who[a.idx] = who[a.idx] || []).push(a);
+  const key = `${lo},${hi},${to},${w},${bass},${(act || []).map(a => a.idx + (a.resting ? 'r' : '') + a.sec).join('.')},${pats.map(P => P.len + ':' + P.notes.length).join('.')}`;
   if (key === NOTATION.key) return; NOTATION.key = key;
-  el.innerHTML = engrave(pats, {width:w, bass, live:i => i >= lo && i <= hi, upcoming:i => i > hi,
+  el.innerHTML = engrave(pats, {width:w, bass, live:i => i >= lo && i <= hi, upcoming:i => i > hi, players:i => who[i] || [],
     label:`Patterns ${pats[0].i} to ${pats[pats.length-1].i} in staff notation`});
 }
