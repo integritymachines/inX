@@ -118,7 +118,7 @@ function engrave(pats, opts){
     const rowHi = Math.max(-99, ...row.flatMap(sg => sg.ev.filter(e => !e.rest).map(e => e.heads[e.heads.length-1].dn)));
     const ny = Math.max(r*lineH + 3.6*SP, Math.min(y0, yOf(rowHi, r) - 1.4*SP - (rowHi >= midDn - 4 ? 3.3*SP : 0)));
     row.forEach((seg, si) => {
-      const it = seg.it, P = it.P, dim = opts.upcoming(P.i) ? ' up' : '', live = opts.live(P.i);
+      const it = seg.it, P = it.P, dim = opts.upcoming(P.i) ? ' up' : P.i < opts.lo ? ' past' : '', live = opts.live(P.i);
       if (si && seg.first){ svg += `<line class="bar" x1="${(cx - SP).toFixed(1)}" x2="${(cx - SP).toFixed(1)}" y1="${y0}" y2="${yB}"/>`; }
       if (seg.sigNow){ svg += `<line class="bar" x1="${(cx - 0.6*SP).toFixed(1)}" x2="${(cx - 0.6*SP).toFixed(1)}" y1="${y0}" y2="${yB}"/>`; cx += 0.4*SP; drawSig(it.sig, it.old); cx += 0.8*SP; }
       svg += `<g class="pat${dim}">`;
@@ -218,18 +218,19 @@ function engrave(pats, opts){
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label}">${svg}</svg>`;
 }
 
-/* the panel: patterns in play (and the next one, faded), redrawn only when that set changes */
-function drawNotation(lo, hi, act){
+/* the panel: the roll's window of patterns (played ones and coming ones faded), redrawn only when that set changes */
+function drawNotation(lo, hi, act, from, upto){
   const el = NOTATION.el; if (!NOTATION.on || !el) return;
   if (!E.gen){ if (NOTATION.key !== 'idle'){ NOTATION.key = 'idle'; el.innerHTML = '<p class="hint">Press "Start listening". The patterns in play will appear here in staff notation.</p>'; } return; }
-  const to = Math.min(hi + 1, E.gen.pats.length - 1), pats = [];
-  for (let i = Math.max(0, lo); i <= to; i++) if (E.gen.pats[i]) pats.push(E.gen.pats[i]);
+  // the same window as the roll: a few patterns behind, those in play, and what is coming
+  const to = Math.min(upto == null ? hi + 1 : upto, E.gen.pats.length - 1), pats = [];
+  for (let i = Math.max(0, from == null ? lo : from); i <= to; i++) if (E.gen.pats[i]) pats.push(E.gen.pats[i]);
   if (!pats.length) return;
   const w = Math.floor(el.clientWidth), all = pats.flatMap(P => P.midi).sort((a, b) => a - b);
   const bass = all.length && all[all.length >> 1] < 55;
   const who = {}; for (const a of act || []) (who[a.idx] = who[a.idx] || []).push(a);
   const key = `${lo},${hi},${to},${w},${bass},${(act || []).map(a => a.idx + (a.resting ? 'r' : '') + a.sec).join('.')},${pats.map(P => P.len + ':' + P.notes.length).join('.')}`;
   if (key === NOTATION.key) return; NOTATION.key = key;
-  el.innerHTML = engrave(pats, {width:w, bass, live:i => i >= lo && i <= hi, upcoming:i => i > hi, players:i => who[i] || [],
+  el.innerHTML = engrave(pats, {width:w, bass, live:i => i >= lo && i <= hi, upcoming:i => i > hi, lo, players:i => who[i] || [],
     label:`Patterns ${pats[0].i} to ${pats[pats.length-1].i} in staff notation`});
 }

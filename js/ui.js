@@ -209,7 +209,7 @@ function drawStream(){
   const N = 15, from = Math.max(0, lo - 4), to = from + N - 1;
   // generate ahead for the preview, one pattern per frame so it never stalls the audio; this starts during the opening pulse
   if (E.started && !(E.gather && E.gather.dropping) && have < to) E.gen.get(have + 1);
-  if (NOTATION.on){ drawNotation(lo, hi, S.act); return; }   // notation in lieu of the roll
+  if (NOTATION.on){ drawNotation(lo, hi, S.act, from, to); return; }   // notation in lieu of the roll
   const cells = []; for (let i=from;i<=Math.min(to, E.gen.pats.length - 1);i++) if (E.gen.pats[i]) cells.push(E.gen.pats[i]);
   const n = N, cw = (w - 8)/n, top = 16, rollH = h - 62;
   g2.font = `10.5px ${css('--mono')}`;
