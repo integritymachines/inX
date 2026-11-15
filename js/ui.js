@@ -208,6 +208,7 @@ function drawStream(){
   const N = 15, from = Math.max(0, lo - 4), to = from + N - 1;
   // generate ahead for the preview, one pattern per frame so it never stalls the audio; this starts during the opening pulse
   if (E.started && !(E.gather && E.gather.dropping) && have < to) E.gen.get(have + 1);
+  drawNotation(lo, hi);
   const cells = []; for (let i=from;i<=Math.min(to, E.gen.pats.length - 1);i++) if (E.gen.pats[i]) cells.push(E.gen.pats[i]);
   const n = N, cw = (w - 8)/n, top = 16, rollH = h - 62;
   g2.font = `10.5px ${css('--mono')}`;
@@ -241,6 +242,15 @@ function drawStream(){
     });
   });
 }
+/* Notation: off by default, a click away; the choice is remembered in this browser */
+NOTATION.el = $('#notation');
+function setNotation(on){
+  NOTATION.on = on; NOTATION.key = ''; NOTATION.el.hidden = !on; $('#notation-btn').setAttribute('aria-pressed', String(on));
+  if (!on) NOTATION.el.innerHTML = '';
+  try { localStorage.setItem('inx-notation', on ? '1' : '0'); } catch (e) {}
+  render();
+}
+$('#notation-btn').addEventListener('click', () => setNotation(!NOTATION.on));
 let tiles = [];
 function buildRoster(){
   const box = $('#players'); box.innerHTML = '';
@@ -305,6 +315,7 @@ function render(){
 let last = 0;
 function loop(ts){ if (ts - last > 150){ last = ts; render(); } requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
+try { if (localStorage.getItem('inx-notation') === '1') setNotation(true); } catch (e) {}
 window.addEventListener('resize', () => render());
 
 /* Test hook: run the ensemble without sound. */
