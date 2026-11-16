@@ -33,7 +33,7 @@ function elecPulse(p, t){
   }
   // arp
   const rate = K.arpRate || 1;
-  const arpLv = trackOn() ? SECTION[trackType()].arp : 1;
+  const arpLv = trackOn() ? SECTION[trackType()].arp*clamp(1 + 0.5*energy(), 0, 1.5) : 1;
   if (K.arp && arpLv > 0 && step % rate === 0){
     const ms = chordMidis(57), seq = ms.concat(ms.map(m => m + 12), ms.slice(1, 3).map(m => m + 24).reverse());
     const m = seq[mod(ELEC.arpStep++, seq.length)];
@@ -55,7 +55,7 @@ function warmPad(m, t, dur, vel){
 }
 function arpNote(m, t, dur, vel, cut){
   const f = tunedHz(m), g = ctx.createGain(), F = ctx.createBiquadFilter(); F.type = 'lowpass'; F.Q.value = 6; F.frequency.setValueAtTime(cut*1.6, t); F.frequency.exponentialRampToValueAtTime(Math.max(200, cut*0.6), t + 0.12);
-  F.connect(g); g.connect(music);
+  F.connect(g); g.connect(music); echoSend(g, 0.3);
   const o = ctx.createOscillator(), o2 = ctx.createOscillator(); o.type = 'sawtooth'; o2.type = 'square'; o.frequency.value = f; o2.frequency.value = f; o2.detune.value = 6;
   const g2 = ctx.createGain(); g2.gain.value = 0.5; o.connect(F); o2.connect(g2); g2.connect(F);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.15);

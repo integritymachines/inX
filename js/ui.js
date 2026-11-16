@@ -176,7 +176,7 @@ const DRUM_COLORS = {kick:'#e8603c', hat:'#e0b83a', clap:'#e86fa8', ohat:'#8fc93
 /* The track form's position bar: the plan's sections in proportion, the current one filling up. */
 const trackEl = $('#track'); let trackKey = '';
 function drawTrack(){
-  const on = trackOn() && E.started; trackEl.hidden = !on; if (!on){ trackKey = ''; return; }
+  const on = trackOn() && E.started; trackEl.hidden = !on; $('#knobs').hidden = !on; if (!on){ trackKey = ''; return; }
   const P = TRACK.plan, s = trackSec(), nx = trackNext();
   const key = TRACK.n + ':' + TRACK.sec + ':' + P.map(q => q.type + q.bars).join('.');
   if (key !== trackKey){
@@ -190,6 +190,22 @@ function drawTrack(){
     + (TRACK.wait && gatherPhase() === 'call' ? ' · held for the gathering' : '');
   const f = trackEl.querySelector('.tk-fill'); if (f) f.style.width = (100*trackX(E.p)).toFixed(1) + '%';
 }
+/* The four knobs: centered at 0, each pushes the planned curves; double-click returns it to 0. */
+const KNOBS = ['energy', 'filter', 'space', 'drive'];
+function knobBg(el, v){   // the fill runs from the center to the value
+  const a = 50 + Math.min(0, v)/2, b = 50 + Math.max(0, v)/2, ac = 'var(--accent)', ln = 'var(--line)';
+  el.style.setProperty('--kn-bg', `linear-gradient(90deg, ${ln} ${a}%, ${ac} ${a}%, ${ac} ${b}%, ${ln} ${b}%), ${ln}`);
+  if (v === 0) el.style.setProperty('--kn-bg', `linear-gradient(90deg, ${ln} calc(50% - 1px), var(--muted) calc(50% - 1px), var(--muted) calc(50% + 1px), ${ln} calc(50% + 1px))`);
+}
+function fmtKnob(v){ return v === 0 ? '0' : (v > 0 ? '+' : '−') + Math.abs(v); }
+for (const k of KNOBS){
+  const el = $('#kn-' + k), out = $('#kn-' + k + '-o');
+  const set = v => { el.value = v; MOVE.knob[k] = v/100; out.textContent = fmtKnob(v); knobBg(el, v); };
+  knobBg(el, 0);
+  el.addEventListener('input', () => set(+el.value));
+  el.addEventListener('dblclick', () => set(0));
+}
+function syncKnobs(){ for (const k of KNOBS){ const v = Math.round(MOVE.knob[k]*100); $('#kn-' + k).value = v; $('#kn-' + k + '-o').textContent = fmtKnob(v); knobBg($('#kn-' + k), v); } }
 function drawDrums(){
   const show = TECHNO.X > 0; dv.classList.toggle('on', show); document.querySelector('.dash').classList.toggle('techno', show); if (!show) return;
   const dpr = window.devicePixelRatio || 1, w = dv.clientWidth, h = dv.clientHeight;

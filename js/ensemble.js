@@ -372,7 +372,7 @@ function tacetDensity(){
     const t = trackType(), sd = {intro:0.35, groove:0.7, peak:1, breakdown:0.3, build:lerp(0.5, 1, trackX(E.p)), drop:1, outro:0.4}[t] ?? 0.7;
     d = ST.wave ? 0.65*sd + 0.35*d : sd;
   }
-  return d;
+  return clamp(d + 0.3*energy(), 0.15, 1);   // the Energy knob
 }
 function tacetBack(a, p){
   const S = stats();

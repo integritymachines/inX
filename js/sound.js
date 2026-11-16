@@ -91,6 +91,7 @@ function initAudio(){
   mlp = ctx.createBiquadFilter(); mlp.type = 'lowpass'; mlp.frequency.value = 20000; mlp.Q.value = 0.9; mlp.connect(duck);   // the techno build's filter
   music = ctx.createGain(); music.connect(mlp);
   drumBus = ctx.createGain(); drumBus.gain.value = 0.3; drumBus.connect(bus);
+  if (typeof initMovement === 'function') initMovement();   // filter, echo and drive for the track form
 }
 function impulse(sec){
   const n = Math.floor(ctx.sampleRate*sec), b = ctx.createBuffer(2, n, ctx.sampleRate);

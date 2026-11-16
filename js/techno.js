@@ -60,12 +60,13 @@ function initTechno(){
   TECHNO.bassLine = makeBass(K.bass); TECHNO.pat.bass = TECHNO.bassLine.map(x => x.v);
   TECHNO.base = TECHNO.pat; TECHNO.pat = cloneBar(TECHNO.base);
   TRACK.plan = null; TRACK.n = 0;   // a new kit (scene) starts a new track
+  if (typeof resetKnobs === 'function') resetKnobs();
   TECHNO.lastBar = -1; TECHNO.epochSeen = E.gen ? E.gen.epoch : 0; TECHNO.phase = 'flow';
   for (const d of DRUMS){ TECHNO.on[d.key] = TECHNO.on[d.key] || false; TECHNO.level[d.key] = TECHNO.level[d.key] || 0; TECHNO.gate[d.key] = 1; }
 }
 function cloneBar(B){ const P = {}; for (const k in B) P[k] = B[k].slice(); return P; }
 /* How busy the groove should be: John's intensity, or Terry's slow shaping mapped onto 0–1. */
-function grooveI(){ return ST.wave ? clamp(0.5 + (E.I - 0.5)*wDepth(), 0, 1) : clamp(0.5 + terryDb()/6, 0, 1); }
+function grooveI(){ return clamp((ST.wave ? 0.5 + (E.I - 0.5)*wDepth() : 0.5 + terryDb()/6) + 0.35*energy(), 0, 1); }   // the Energy knob pushes it
 /* Groove evolution (0–1; 0.5 is the original setting): scales fills, ghost notes, intensity-driven density,
    phrase drift and new grooves per section. Near 0 the groove stays as the preset sets it. */
 const EVO = {amount:0.5};
@@ -93,7 +94,7 @@ function buildBar(bar){
   const tt = trackOn() ? trackType() : null, lastOfSec = tt && TRACK.bar === trackSec().bars - 1;
   const fillDue = tt ? (tt !== 'build' && tt !== 'breakdown' && (lastOfSec || (mod(bar, 8) === 7 && r() < 0.5)))   // sections end on a fill
                      : mod(bar, 8) === 7 && !E.gather;
-  if (fillDue && r() < Math.min(0.95, (lastOfSec ? 1.2 : 0.6)*ek)){
+  if (fillDue && r() < Math.min(0.95, (lastOfSec ? 1.2 : 0.6)*ek*(1 + 0.6*energy()))){
     const f = ['roll', 'kickdrop', 'lift', 'perc'][Math.floor(r()*4)]; TECHNO.fill = f;
     const roll = K.clap === 'none' ? 'perc' : 'clap';
     if (f === 'roll') for (let i=8;i<16;i++){ if (i >= 12 || i % 2 === 0) P[roll][i] = 0.3 + 0.07*(i - 8); }
@@ -111,7 +112,10 @@ function gatherPhase(){ const G = E.gather; return !G ? 'flow' : G.dropping ? 'd
 function gateTargets(ph, x, p){
   const t = {kick:1, hat:1, clap:1, ohat:1, perc:1, bass:1};
   if (!technoForm()) return t;
-  if (trackOn()) return trackGates(p);
+  if (trackOn()){ const g = trackGates(p), e = energy();   // Energy thins or fills the upper drums
+    for (const k of ['hat', 'ohat', 'perc', 'clap']) g[k] = clamp(g[k]*(1 + 0.6*e), 0, 1.25);
+    if (e < -0.6) g.bass *= clamp(1 + 2.5*(e + 0.6), 0, 1);
+    return g; }
   if (ph === 'call') return {kick:0, hat:0.6, clap:0.5, ohat:0.4, perc:0.7, bass:0};
   if (ph === 'climax') return {kick:0, hat:lerp(0.6, 1, x), clap:0, ohat:lerp(0.4, 0.9, x), perc:0.8, bass:0};
   return t;
@@ -174,7 +178,8 @@ function technoPulse(p, t){
   const gt = gateTargets(ph, x, p);
   for (const k in gt) TECHNO.gate[k] += (gt[k] - TECHNO.gate[k])*0.12;
   const tb = trackOn() && trackType() === 'breakdown';
-  if (mlp && ctx && (p % 2 === 0)) mlp.frequency.setTargetAtTime(musicCutoff(ph, x, p), t, ph === 'call' || tb ? 0.8 : 0.15);
+  if (mlp && ctx && (p % 2 === 0)) mlp.frequency.setTargetAtTime(Math.min(musicCutoff(ph, x, p), MOVE.cur.filt < 0 ? 20000*Math.pow(700/20000, -MOVE.cur.filt) : 20000), t, ph === 'call' || tb ? 0.8 : 0.15);
+  movePulse(p, t);
   if (!E.audio || !ctx || !drumBus) return;
   const anyone = active().some(a => !a.resting);
   if (!anyone && !E.agents.some(a => a.mode === 'out')) return;
@@ -228,7 +233,7 @@ function drumKick(t, v){
   const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
   const K = kit();
   o.frequency.setValueAtTime(K.kickPitch[0], t); o.frequency.exponentialRampToValueAtTime(K.kickPitch[1], t + 0.09);
-  env(g, t, v, K.kickDecay); o.connect(g); g.connect(drumBus); o.start(t); o.stop(t + K.kickDecay + 0.03);
+  const kd = K.kickDecay*moveLen(); env(g, t, v, kd); o.connect(g); g.connect(drumBus); o.start(t); o.stop(t + kd + 0.03);
   const n = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), gn = ctx.createGain();
   n.buffer = noiseBuf(); hp.type = 'highpass'; hp.frequency.value = 2500; env(gn, t, 0.25*v, 0.012);
   n.connect(hp); hp.connect(gn); gn.connect(drumBus); n.start(t); n.stop(t + 0.02);
@@ -236,8 +241,8 @@ function drumKick(t, v){
 function drumHat(t, v, open){
   const n = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
   n.buffer = noiseBuf(); hp.type = 'highpass'; hp.frequency.value = 7000; bp.type = 'bandpass'; bp.frequency.value = 10000*Math.min(1.2, waveBright()); bp.Q.value = 0.8;
-  const dec = open ? kit().openDecay : kit().hatDecay; env(g, t, v, dec);
-  n.connect(hp); hp.connect(bp); bp.connect(g); g.connect(drumBus); n.start(t, Math.random()*0.5); n.stop(t + dec + 0.02);
+  const dec = (open ? kit().openDecay : kit().hatDecay)*moveLen(); env(g, t, v, dec);
+  n.connect(hp); hp.connect(bp); bp.connect(g); g.connect(drumBus); if (open) echoSend(g, 0.3); n.start(t, Math.random()*0.5); n.stop(t + dec + 0.02);
 }
 function drumClap(t, v){
   const n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
@@ -245,7 +250,7 @@ function drumClap(t, v){
   g.gain.setValueAtTime(0.0001, t);
   for (const k of [0, 0.011, 0.022]){ g.gain.setValueAtTime(v, t + k); g.gain.exponentialRampToValueAtTime(0.15*v, t + k + 0.009); }
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-  n.connect(bp); bp.connect(g); g.connect(drumBus); n.start(t, Math.random()*0.5); n.stop(t + 0.22);
+  n.connect(bp); bp.connect(g); g.connect(drumBus); echoSend(g, 0.35); n.start(t, Math.random()*0.5); n.stop(t + 0.22);
 }
 function drumSnare(t, v){
   const n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
@@ -256,25 +261,25 @@ function drumSnare(t, v){
 }
 function drumRim(t, v){
   const o = ctx.createOscillator(), g = ctx.createGain(), hp = ctx.createBiquadFilter(); o.type = 'square'; o.frequency.value = 1250;
-  hp.type = 'highpass'; hp.frequency.value = 900; env(g, t, 0.6*v, 0.035); o.connect(hp); hp.connect(g); g.connect(drumBus); o.start(t); o.stop(t + 0.05);
+  hp.type = 'highpass'; hp.frequency.value = 900; env(g, t, 0.6*v, 0.035); o.connect(hp); hp.connect(g); g.connect(drumBus); echoSend(g, 0.35); o.start(t); o.stop(t + 0.05);
 }
 function drumPerc(t, v){
   const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
   o.frequency.setValueAtTime(540, t); o.frequency.exponentialRampToValueAtTime(300, t + 0.05);
-  env(g, t, v, 0.12); o.connect(g); g.connect(drumBus); o.start(t); o.stop(t + 0.14);
+  env(g, t, v, 0.12); o.connect(g); g.connect(drumBus); echoSend(g, 0.4); o.start(t); o.stop(t + 0.14);
 }
 function drumBass(t, v, m, b = {}){
   const K = kit(), type = K.bass, f = tunedHz(m), bright = waveBright()*lerp(0.6, 1.2, smooth(0.6, 1, TECHNO.X));
   const g = ctx.createGain(), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.connect(g); g.connect(drumBus);
   const oscs = [];
   const osc = (type2, fr, amp) => { const o = ctx.createOscillator(), a = ctx.createGain(); o.type = type2; o.frequency.value = fr; a.gain.value = amp; o.connect(a); a.connect(lp); oscs.push(o); return o; };
-  let dur = E.period*0.85, cut = 300, q = 1;
+  let dur = E.period*0.85*moveLen(), cut = 300, q = 1;
   if (type === 'acid'){                     // resonant sawtooth with accents and slides
     const o = osc('sawtooth', f, 1); q = 14; cut = 280*bright;
     if (b.slide && TECHNO.prevBass){ o.frequency.setValueAtTime(TECHNO.prevBass, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.06); dur = E.period*1.05; }
     lp.frequency.setValueAtTime(cut*(b.acc ? 9 : 5), t); lp.frequency.exponentialRampToValueAtTime(cut, t + (b.acc ? 0.16 : 0.1));
   } else if (type === 'rumble'){            // dark, rolling low end
-    osc('sine', f, 1); osc('triangle', f, 0.4); cut = 160; dur = E.period*1.6;
+    osc('sine', f, 1); osc('triangle', f, 0.4); cut = 160; dur = E.period*1.6*moveLen();
     lp.frequency.value = cut;
   } else if (type === 'house'){             // rounded pluck
     osc('sawtooth', f, 0.7); osc('square', f/2, 0.35); cut = 650*bright; q = 3;
