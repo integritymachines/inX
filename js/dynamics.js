@@ -37,7 +37,7 @@ function formGain(){ return ST.wave ? waveGain() : Math.pow(10, terryDb()/20); }
 /* Orchestration: how far each group is from its share, counting players sounding and on their way. */
 function roleNeed(extra = []){
   const cnt = {foundation:0, line:0, color:0, beat:0}; let total = 0;
-  for (const a of active()){ cnt[SECTIONS[a.sec].role]++; total++; }
+  for (const a of active()){ if (a.tacet) continue; cnt[SECTIONS[a.sec].role]++; total++; }
   for (const s of E.slots) if (s.waitUntil !== null && !s.agent){ cnt[SECTIONS[s.sec].role]++; total++; }
   for (const s of extra){ cnt[SECTIONS[s.sec].role]++; total++; }
   const need = {};

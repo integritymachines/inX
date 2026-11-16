@@ -30,7 +30,8 @@ const STAY = {sec:30};   // average seconds on a pattern (set by the 'Stay per p
 function setMinReps(a){ const P = E.gen.get(a.idx); const k = E.excite ? 0.45 + 1.1*P.ex : 1; a.minReps = Math.max(1, Math.round((a.pace || 1)*k*(STAY.sec/E.period)*(0.6 + 0.8*Math.random())/P.len)); }
 function active(){ return E.agents.filter(a => a.mode !== 'out' && !a.removed); }
 function stats(){
-  const act = active(); const ix = act.map(x => x.idx).sort((x,y) => x-y);
+  const act = active().filter(a => !a.tacet);   // players sitting a stretch out (tacet) don't hold the ensemble back
+  const ix = act.map(x => x.idx).sort((x,y) => x-y);
   return {act, lo:ix[0], hi:ix[ix.length-1], med:ix[ix.length>>1]};
 }
 function name(a){ return SECTIONS[a.sec].label; }
@@ -271,6 +272,7 @@ function slotState(s){
   const a = s.agent; if (!a) return 'off';
   if (a.mode === 'out') return 'sitting out';
   if (a.leaving) return 'leaving';
+  if (a.tacet) return 'tacet';
   const G = E.gather;
   if (G && G.dropping) return a.id === G.soloist ? 'soloist' : 'dropping out';
   if (G && G.climax) return 'climax';
@@ -354,9 +356,52 @@ function manageSlots(){
     s.manual = false; s.waitUntil = now + (short && !act.length ? 0.2 : 1 + Math.random()*2);
     E.joinCooldown = now + 1;
   }
+  tacetTick(E.p);
   updateTuning();
   droneTick();
   applyDynamics();
+}
+/* Tacet: with a fixed line-up (a preset's players) or a track form, players sit stretches out and come back with the music's
+   overall dynamics, so the texture thins and thickens as it does with visitors coming and going. The target share of
+   players sounding follows the track section, John's intensity, or the section's arc; one change every couple of bars. */
+function tacetDensity(){
+  const S = stats();
+  let d = S.act.length && E.gen ? lerp(0.45, 1, Math.pow(E.gen.arcAt(S.med), 0.8)) : 1;
+  if (ST.wave) d = clamp(0.3 + 0.8*E.I, 0, 1);
+  if (typeof trackOn === 'function' && trackOn()){
+    const t = trackType(), sd = {intro:0.35, groove:0.7, peak:1, breakdown:0.3, build:lerp(0.5, 1, trackX(E.p)), drop:1, outro:0.4}[t] ?? 0.7;
+    d = ST.wave ? 0.65*sd + 0.35*d : sd;
+  }
+  return d;
+}
+function tacetBack(a, p){
+  const S = stats();
+  a.tacet = false; a.idx = S.act.length ? clamp(Math.max(a.idx, S.med), S.lo, S.lo + SPREAD - 1) : a.idx; a.reps = 0; setMinReps(a);
+  a.resting = true; a.skip = true; a.restUntil = snapUp(p + 1); a.nextStart = a.restUntil; a.lastT = E.lastT;
+}
+function tacetTick(p){
+  const tacit = E.agents.filter(a => a.tacet && !a.removed);
+  // visitors already come and go; without a fixed line-up only the track's quiet sections thin the ensemble
+  const quiet = typeof trackOn === 'function' && trackOn() && ['intro', 'breakdown', 'outro'].includes(trackType());
+  const on = (FIXED || quiet) && !E.gather && !E.agents.some(x => x.mode === 'out' && !x.removed);
+  if (!on){ for (const a of tacit) tacetBack(a, p); return; }   // a gathering calls everybody back
+  if (E.clock < (E.tacetAt || 0)) return;
+  const pool = active().filter(a => a.mode === 'flow' && !a.leaving && !phaseActive(a));
+  if (pool.length < (FIXED ? 3 : 4)) return;
+  const sounding = pool.filter(a => !a.tacet), target = Math.max(2, Math.round(pool.length*tacetDensity()));
+  const sec = typeof trackOn === 'function' && trackOn() ? trackType() : null, low = sec === 'breakdown' || sec === 'build' || sec === 'intro';
+  const cnt = {}; for (const a of sounding){ const r = SECTIONS[a.sec].role; cnt[r] = (cnt[r] || 0) + 1; }
+  const pick = (list, w) => { const ws = list.map(w), tot = ws.reduce((x, y) => x + y, 0); let u = Math.random()*tot; for (let i=0;i<list.length;i++){ u -= ws[i]; if (u <= 0) return list[i]; } return list[list.length-1]; };
+  if (sounding.length > target){
+    // the lowest and the drums thin out first in breakdowns and builds; otherwise the role with most players, keeping one of each
+    const a = pick(sounding, x => { const r = SECTIONS[x.sec].role; return (low && (r === 'foundation' || r === 'beat') ? 3 : 1)*Math.max(0.15, (cnt[r] || 1) - 1 + 0.15); });
+    a.tacet = true; a.resting = true; a.skip = true; a.restUntil = Infinity; a.nextStart = Infinity;
+    log(`${name(a)} rests`);
+  } else if (sounding.length < target && tacit.length){
+    const a = pick(tacit, x => { const r = SECTIONS[x.sec].role; return (cnt[r] ? 1 : 3)*(!low && (r === 'foundation' || r === 'beat') ? 1.5 : 1); });
+    tacetBack(a, p); log(`${name(a)} comes back`);
+  } else return;
+  E.tacetAt = E.clock + 2*BAR*E.period*(0.75 + 0.5*Math.random());
 }
 function pulse(t){
   const p = E.p;

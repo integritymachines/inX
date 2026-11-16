@@ -129,7 +129,7 @@ button.mini[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
 .pill{align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;font-family:var(--mono);padding:0 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .pill.playing{color:var(--good);border-color:var(--good)}
-.pill.waiting,.pill.leaving,.pill.rest{border-style:dashed}
+.pill.waiting,.pill.leaving,.pill.rest,.pill.tacet{border-style:dashed}
 .pill.called-in{color:var(--warn);border-color:var(--warn)}
 .pill.climax,.pill.soloist{color:var(--accent);border-color:var(--accent)}
 .pill.dropping-out{color:var(--crit);border-color:var(--crit)}
@@ -287,32 +287,33 @@ nav.screens a{font-size:12px;color:var(--accent);text-decoration:none;border:1px
     <li id="n24"><b>Electronica.</b> From 50% Techno a kit can switch on an electronica layer, in the spirit of Kiasmos and Rival Consoles: a chord loop held for several bars (<code>prog</code>: scale degrees from the tonic, e.g. <code>[0, 5, 2, 6]</code> = i–VI–III–VII in Aeolian; <code>hold</code>: bars per chord), which the bass and the pattern generator follow; a warm, slowly breathing <code>pad</code> on every chord change and an <code>arp</code>eggio of the chord's tones (<code>arpRate</code>: 1 for sixteenths, 2 for eighths) whose filter opens slowly across the section, closes in the breakdown and opens fully in the build, both ducked by the kick like everything else; a softer, syncopated <code>kick</code> (<code>"broken"</code>, or <code>"half"</code> for half time); and <code>tape</code> saturation on the whole mix (0–1, level-compensated). The <i>Nordic</i> (after Kiasmos: grand piano, strings, harp and a pad, A Aeolian, 122 BPM, chords every 8 bars) and <i>Analog</i> (after Rival Consoles: Prophet, Juno, Polysix, MS-20, Moog, M1, piano and congas, D Dorian, 118 BPM, chords every 16 bars, heavier tape) scenes in Styles use it. The players' patterns stay in the scale; they are made a little ahead and last a while, so they don't change with every chord, as a piano line over slow chords doesn't either.</li>
     <li id="n25"><b>Notation.</b> The Notation button on Pattern stream replaces the roll with the same window of patterns on a staff: a few already played, those in play, and those coming (faded), with a dot for each player, numbered as in In C's score. Pulses are sixteenths; a note held across a beat is tied, notes sharing an onset are written as a chord, and each pattern keeps its accidentals like a bar. The key signature follows the key walk. Engraving glyphs from <a href="https://github.com/steinbergmedia/bravura">Bravura</a> (SIL Open Font License 1.1).</li>
     <li id="n26"><b>Track form.</b> From 50% Techno, the techno layer follows a plan of sections, as a produced track does: intro, groove, peak, breakdown, build, drop, outro, each some bars long with its own drums, bass, pad, arpeggio and orchestra filter. When a plan ends, the next track starts with a new groove. Four forms are built in (classic, long, rolling, double); a scene can bring its own as kit.form, e.g. [["intro",16],["groove",32],["breakdown",16],["build",8],["drop",32],["outro",16]]. Gatherings steer the plan: the call jumps to a breakdown, held until the climax; the climax becomes the build, as long as the crescendo; the dropout is the drop. A position bar under the stream shows the plan, the section and what comes next.</li>
+    <li id="n27"><b>Tacet.</b> With a preset's fixed line-up, players now sit stretches out (tacet) and come back with the music's overall dynamics: the share of players sounding follows the track section (few in intro, breakdown and outro, all at peak and drop), John's intensity, or the section's arc, one change every couple of bars; the low instruments and drums go first in breakdowns and builds, and each role keeps a player where it can. Without a fixed line-up, visitors already come and go, so only the track's quiet sections thin the ensemble. A gathering calls everybody back.</li>
     <li id="n23"><b>Scenes.</b> The Scene field in Setup takes either a bare array of seed patterns or a whole scene, one JSON object: <code>{"inx":1, "name":"…", "base":"katerblau", "settings":{…}, "players":[…], "roster":[…], "seeds":[…], "seed":1964}</code>. <i>base</i> is a built-in preset to start from (its key, e.g. <code>inc</code>, <code>notredame</code>, <code>berghain</code>, <code>productive</code>); <i>settings</i> override it: <code>X</code> (Techno, 0–1), <code>bpm</code> or <code>pulseMs</code> (per eighth note), <code>composers</code> (<code>glass</code>, <code>reich</code>, <code>adams</code>, <code>young</code>), <code>terry</code> (span), <code>pulse</code>, <code>philip</code>, <code>steve</code>, <code>john</code>, <code>drone</code>, <code>evo</code> (0–1), <code>stay</code> (s), <code>gap</code>, <code>lease</code>, <code>minN</code>, <code>maxN</code>, <code>wet</code> (reverb), <code>kit</code> (the drum kit) and <code>mode</code> (<code>tuning</code>: <code>ji</code> or <code>pyth</code>; <code>scale</code>: <code>dorian</code>, <code>phrygian</code>, <code>lydian</code>, <code>mixolydian</code>, <code>aeolian</code>; <code>peakDb</code>, <code>surprise</code>, <code>gridAll</code>, <code>flatten</code>). <i>players</i> fixes the ensemble, as the club presets do; <i>roster</i> sets the instruments on stage. Anything left out keeps the base's value. <i>Apply</i> puts the field into effect (new seeds start the stream over); <i>Copy current</i> writes the running settings into the field as a scene; <i>Save</i> downloads it as a file and keeps it in this browser under <i>My scenes</i> in the preset menu; <i>Open…</i> loads a scene file; <i>Forget</i> removes the chosen one from My scenes. The <i>Styles</i> group in the preset menu holds built-in scenes in the manner of a composer or tradition, with original patterns, settings and line-ups (no material is taken from any piece): <i>Pulse study</i> (after Reich: pianos, mallets, clarinet, flute and strings pulsing in eighths in A Aeolian, with phasing), <i>Additive</i> (after Glass: organ, synth pad, winds and strings on arpeggios that grow and shrink), <i>Long loops</i> (after Eno: sparse long tones in patterns of unequal, odd lengths that drift against each other; piano, vibraphone, pad, cello, flute, harp, chimes), <i>Shaker</i> (after Adams: strings on tremolo figures riding intensity waves, G Mixolydian), <i>Tintinnabuli</i> (after Pärt: stepwise lines against the tones of the minor triad, bells, piano and strings over a quiet drone) and <i>Nordic</i> and <i>Analog</i> (see Electronica), <i>Robotik</i> (after Kraftwerk: Moog, M1, Prophet, Polysix, MS-20, Juno, glockenspiel and metallic percussion, all electronic, dry, strict 4/4 with every player on the grid and in lockstep, an octave-jumping sequencer bass, a short chord loop every 4 bars, A Aeolian, 116 BPM), and <i>Kotekan</i> (Balinese gamelan: interlocking parts, one on the beat and one between, on saron, gendèr, balafon, kalimba, mbira and vibraphone, E Phrygian). Choosing one shows it in the Scene field, ready to change and save.</li>
     <li id="n22"><b>Setup.</b> The second screen chooses the instruments on stage (up to 24 of the 57 available, at least 2) and holds the Scene field (see Scenes). Beyond the default 24 there are: harpsichord; alto recorder and harmonica; vibraphone and tubular bells; from around the world kalimba, mbira, balafon and đàn tranh (recorded) and a gamelan pair, saron and gendèr (synthesized: bronze bars with inharmonic overtones, each sounded twice a few hertz apart so they beat, as gamelan pairs are tuned); a medieval family: bowed and plucked psaltery, Renaissance organ, folk harp, soprano and bass recorders, hand chimes and a tabor-and-bells player (frame drums, rope-tension snare, tambourine, sleigh bells, finger cymbals), all recorded, plus lute, hurdy-gurdy (with its drones on the key's tonic and fifth and its buzzing bridge), shawm, crumhorn and bagpipe (with drones), synthesized; six vintage synthesizers imitated in the browser (Moog bass, M1 organ bass, MS-20 lead, Juno pad, Polysix strings, Prophet brass), imitations, not recordings; and three percussion players: congas and bongos, darbuka and frame drum, and bells and woods (like the hand percussion, each picks one of six sounds by the register of the note it plays). Every recorded note's pitch was measured, and it is retuned on playback to the ensemble's tuning, so instruments with their own traditional tuning (kalimba, mbira, balafon, đàn tranh) play in tune with the rest. Changing the line-up takes effect at once and loads any new recordings: kept instruments keep their players, new ones appear as empty tiles, and players whose instrument you take off finish their pattern and leave. A club preset or mode with its own line-up swaps any missing instrument onto the stage in place of one it doesn't use.</li>
   </ol>
 </section>
 
-<script src="js/util.js?v=20261116a"></script>
-<script src="js/styles.js?v=20261116a"></script>
-<script src="js/score.js?v=20261116a"></script>
-<script src="js/sound.js?v=20261116a"></script>
-<script src="js/time.js?v=20261116a"></script>
-<script src="js/glass.js?v=20261116a"></script>
-<script src="js/form.js?v=20261116a"></script>
-<script src="js/tuning.js?v=20261116a"></script>
-<script src="js/balance.js?v=20261116a"></script>
-<script src="js/sampler.js?v=20261116a"></script>
-<script src="js/dynamics.js?v=20261116a"></script>
-<script src="js/techno.js?v=20261116a"></script>
-<script src="js/track.js?v=20261116a"></script>
-<script src="js/electro.js?v=20261116a"></script>
-<script src="js/electrobalance.js?v=20261116a"></script>
-<script src="js/electronica.js?v=20261116a"></script>
-<script src="js/presets.js?v=20261116a"></script>
-<script src="js/ensemble.js?v=20261116a"></script>
-<script src="js/scenes.js?v=20261116a"></script>
-<script src="js/glyphs.js?v=20261116a"></script>
-<script src="js/notation.js?v=20261116a"></script>
-<script src="js/ui.js?v=20261116a"></script>
+<script src="js/util.js?v=20261116b"></script>
+<script src="js/styles.js?v=20261116b"></script>
+<script src="js/score.js?v=20261116b"></script>
+<script src="js/sound.js?v=20261116b"></script>
+<script src="js/time.js?v=20261116b"></script>
+<script src="js/glass.js?v=20261116b"></script>
+<script src="js/form.js?v=20261116b"></script>
+<script src="js/tuning.js?v=20261116b"></script>
+<script src="js/balance.js?v=20261116b"></script>
+<script src="js/sampler.js?v=20261116b"></script>
+<script src="js/dynamics.js?v=20261116b"></script>
+<script src="js/techno.js?v=20261116b"></script>
+<script src="js/track.js?v=20261116b"></script>
+<script src="js/electro.js?v=20261116b"></script>
+<script src="js/electrobalance.js?v=20261116b"></script>
+<script src="js/electronica.js?v=20261116b"></script>
+<script src="js/presets.js?v=20261116b"></script>
+<script src="js/ensemble.js?v=20261116b"></script>
+<script src="js/scenes.js?v=20261116b"></script>
+<script src="js/glyphs.js?v=20261116b"></script>
+<script src="js/notation.js?v=20261116b"></script>
+<script src="js/ui.js?v=20261116b"></script>
 </body>
 </html>
