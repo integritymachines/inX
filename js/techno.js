@@ -59,6 +59,7 @@ function initTechno(){
   };
   TECHNO.bassLine = makeBass(K.bass); TECHNO.pat.bass = TECHNO.bassLine.map(x => x.v);
   TECHNO.base = TECHNO.pat; TECHNO.pat = cloneBar(TECHNO.base);
+  TRACK.plan = null; TRACK.n = 0;   // a new kit (scene) starts a new track
   TECHNO.lastBar = -1; TECHNO.epochSeen = E.gen ? E.gen.epoch : 0; TECHNO.phase = 'flow';
   for (const d of DRUMS){ TECHNO.on[d.key] = TECHNO.on[d.key] || false; TECHNO.level[d.key] = TECHNO.level[d.key] || 0; TECHNO.gate[d.key] = 1; }
 }
@@ -89,7 +90,10 @@ function buildBar(bar){
   if (K.clap !== 'none' && r() < 0.6*I*ek){ const i = [3, 7, 11, 13, 15][Math.floor(r()*5)]; if (!P.clap[i]) P.clap[i] = 0.25; }
   if (r() < 0.5*I*ek){ const i = 2*Math.floor(r()*8) + 1; if (!P.hat[i]) P.hat[i] = 0.3; }
   TECHNO.fill = null;
-  if (mod(bar, 8) === 7 && !E.gather && r() < Math.min(0.95, 0.6*ek)){
+  const tt = trackOn() ? trackType() : null, lastOfSec = tt && TRACK.bar === trackSec().bars - 1;
+  const fillDue = tt ? (tt !== 'build' && tt !== 'breakdown' && (lastOfSec || (mod(bar, 8) === 7 && r() < 0.5)))   // sections end on a fill
+                     : mod(bar, 8) === 7 && !E.gather;
+  if (fillDue && r() < Math.min(0.95, (lastOfSec ? 1.2 : 0.6)*ek)){
     const f = ['roll', 'kickdrop', 'lift', 'perc'][Math.floor(r()*4)]; TECHNO.fill = f;
     const roll = K.clap === 'none' ? 'perc' : 'clap';
     if (f === 'roll') for (let i=8;i<16;i++){ if (i >= 12 || i % 2 === 0) P[roll][i] = 0.3 + 0.07*(i - 8); }
@@ -104,15 +108,17 @@ function buildBar(bar){
    begins with the kick slamming back under a crash, and the groove carries on through the dropout and the solo. */
 function technoForm(){ return TECHNO.X >= 0.5; }
 function gatherPhase(){ const G = E.gather; return !G ? 'flow' : G.dropping ? 'dropout' : G.climax ? 'climax' : 'call'; }
-function gateTargets(ph, x){
+function gateTargets(ph, x, p){
   const t = {kick:1, hat:1, clap:1, ohat:1, perc:1, bass:1};
   if (!technoForm()) return t;
+  if (trackOn()) return trackGates(p);
   if (ph === 'call') return {kick:0, hat:0.6, clap:0.5, ohat:0.4, perc:0.7, bass:0};
   if (ph === 'climax') return {kick:0, hat:lerp(0.6, 1, x), clap:0, ohat:lerp(0.4, 0.9, x), perc:0.8, bass:0};
   return t;
 }
-function musicCutoff(ph, x){
+function musicCutoff(ph, x, p){
   if (!technoForm()) return 20000;
+  if (trackOn()) return trackCutoff(p);
   if (ph === 'call') return 1300;
   if (ph === 'climax') return 1300*Math.pow(15, x);
   return 20000;
@@ -152,6 +158,7 @@ function technoPulse(p, t){
       const want = TECHNO.X >= d.at;
       if (want !== TECHNO.on[d.key]){ TECHNO.on[d.key] = want; if (E.started) log(`${d.label} ${want ? 'enters' : 'leaves'}`); }
     }
+    trackBar(p, t);
     if (E.gen && E.gen.epoch !== TECHNO.epochSeen){ TECHNO.epochSeen = E.gen.epoch; if (TECHNO.X >= 0.2 && EVO.amount >= 0.15) newGroove(); }
     else if (mod(p, PHRASE) === 0 && p > 0) evolveDrums();
     TECHNO.pat = buildBar(Math.floor(p/BAR));
@@ -163,14 +170,11 @@ function technoPulse(p, t){
   // the gathering, techno-style
   const ph = gatherPhase(), G = E.gather;
   const x = ph === 'climax' ? clamp((p - G.climax.start)/(G.climax.end - G.climax.start), 0, 1) : 0;
-  const gt = gateTargets(ph, x);
-  if (ph !== TECHNO.phase){
-    if (technoForm() && ph === 'climax' && G && G.climax) riser(t, (G.climax.end - p)*E.period);
-    if (technoForm() && ph === 'dropout'){ TECHNO.gate.kick = 1; TECHNO.gate.bass = 1; crash(t); }   // the kick slams back
-    TECHNO.phase = ph;
-  }
+  if (ph !== TECHNO.phase){ trackGather(ph, G, p, t); TECHNO.phase = ph; }   // the gathering steers the track form
+  const gt = gateTargets(ph, x, p);
   for (const k in gt) TECHNO.gate[k] += (gt[k] - TECHNO.gate[k])*0.12;
-  if (mlp && ctx && (p % 2 === 0)) mlp.frequency.setTargetAtTime(musicCutoff(ph, x), t, ph === 'call' ? 0.8 : 0.15);
+  const tb = trackOn() && trackType() === 'breakdown';
+  if (mlp && ctx && (p % 2 === 0)) mlp.frequency.setTargetAtTime(musicCutoff(ph, x, p), t, ph === 'call' || tb ? 0.8 : 0.15);
   if (!E.audio || !ctx || !drumBus) return;
   const anyone = active().some(a => !a.resting);
   if (!anyone && !E.agents.some(a => a.mode === 'out')) return;
@@ -188,7 +192,9 @@ function technoPulse(p, t){
     else if (d.key === 'bass'){ const b = TECHNO.bassLine[step]; drumBass(ts, vel*(b.acc ? 1.25 : 1), bassMidi(b.tone, b.oct), b); }
   }
   // the build: a snare roll that speeds up through the climax, ending in thirty-seconds
-  if (technoForm() && ph === 'climax' && TECHNO.level.kick > 0.05){
+  const building = trackOn() ? trackType() === 'build' : technoForm() && ph === 'climax';
+  if (building && TECHNO.level.kick > 0.05){
+    const x = trackOn() ? trackX(p) : clamp((p - G.climax.start)/(G.climax.end - G.climax.start), 0, 1);
     const div = x < 0.35 ? 4 : x < 0.7 ? 2 : 1, v = 0.15 + 0.45*x;
     if (step % div === 0){ drumSnare(ts, v); if (x > 0.85) drumSnare(ts + E.period/2, v); }
   }

@@ -28,18 +28,20 @@ function elecPulse(p, t){
   // pad: a new chord at each change
   if (step === 0 && mod(bar, hold) === 0 && bar !== ELEC.bar && K.pad){
     ELEC.bar = bar; const ms = chordMidis(50), dur = hold*BAR*E.period;
-    const lvl = 0.032*K.pad*(ph === 'call' ? 1.3 : 1);
+    const lvl = 0.032*K.pad*(trackOn() ? SECTION[trackType()].pad : ph === 'call' ? 1.3 : 1);
     ms.slice(0, 4).forEach((m, i) => warmPad(m - (i === 0 ? 12 : 0), t, dur, lvl*(i === 0 ? 0.8 : 1)));
   }
   // arp
   const rate = K.arpRate || 1;
-  if (K.arp && step % rate === 0){
+  const arpLv = trackOn() ? SECTION[trackType()].arp : 1;
+  if (K.arp && arpLv > 0 && step % rate === 0){
     const ms = chordMidis(57), seq = ms.concat(ms.map(m => m + 12), ms.slice(1, 3).map(m => m + 24).reverse());
     const m = seq[mod(ELEC.arpStep++, seq.length)];
     const a = E.gen.arcAt(stats().med || 0);
     let open = Math.pow(a, 1.4);
-    if (ph === 'call') open = 0.15; else if (ph === 'climax'){ const G = E.gather; open = clamp((p - G.climax.start)/(G.climax.end - G.climax.start), 0, 1); }
-    arpNote(m, t, rate*E.period*0.9, 0.018*K.arp, 350 + 5200*open);
+    if (trackOn()){ const S = SECTION[trackType()]; open = trackType() === 'build' ? trackX(p) : S.open ?? open; }
+    else if (ph === 'call') open = 0.15; else if (ph === 'climax'){ const G = E.gather; open = clamp((p - G.climax.start)/(G.climax.end - G.climax.start), 0, 1); }
+    arpNote(m, t, rate*E.period*0.9, 0.018*K.arp*arpLv, 350 + 5200*open);
   }
 }
 function warmPad(m, t, dur, vel){

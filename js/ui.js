@@ -173,6 +173,23 @@ function css(v){ return getComputedStyle(document.documentElement).getPropertyVa
 const cv = $('#stream'), g2 = cv.getContext('2d');
 const dv = $('#drums'), g3 = dv.getContext('2d');
 const DRUM_COLORS = {kick:'#e8603c', hat:'#e0b83a', clap:'#e86fa8', ohat:'#8fc93f', perc:'#33b8cc', bass:'#8a6cf0'};   // clip colors, Ableton-style
+/* The track form's position bar: the plan's sections in proportion, the current one filling up. */
+const trackEl = $('#track'); let trackKey = '';
+function drawTrack(){
+  const on = trackOn() && E.started; trackEl.hidden = !on; if (!on){ trackKey = ''; return; }
+  const P = TRACK.plan, s = trackSec(), nx = trackNext();
+  const key = TRACK.n + ':' + TRACK.sec + ':' + P.map(q => q.type + q.bars).join('.');
+  if (key !== trackKey){
+    trackKey = key;
+    trackEl.innerHTML = `<div class="tk-head"></div><div class="tk-bar">` + P.map((q, i) =>
+      `<div class="tk-sec t-${q.type}${i < TRACK.sec ? ' past' : i === TRACK.sec ? ' now' : ''}" style="flex:${q.bars} 1 0" title="${SECTION[q.type].label}, ${q.bars} bars">`
+      + (i === TRACK.sec ? '<div class="tk-fill"></div>' : '') + `<span>${SECTION[q.type].label}</span></div>`).join('') + '</div>';
+  }
+  const bar = Math.min(TRACK.bar + 1, s.bars);
+  trackEl.querySelector('.tk-head').innerHTML = `Track ${TRACK.n} · <b>${SECTION[s.type].label}</b> · bar ${bar} of ${s.bars}` + (nx ? ` · next: ${SECTION[nx.type].label}` : ' · next: new track')
+    + (TRACK.wait && gatherPhase() === 'call' ? ' · held for the gathering' : '');
+  const f = trackEl.querySelector('.tk-fill'); if (f) f.style.width = (100*trackX(E.p)).toFixed(1) + '%';
+}
 function drawDrums(){
   const show = TECHNO.X > 0; dv.classList.toggle('on', show); document.querySelector('.dash').classList.toggle('techno', show); if (!show) return;
   const dpr = window.devicePixelRatio || 1, w = dv.clientWidth, h = dv.clientHeight;
@@ -311,7 +328,7 @@ function render(){
     $('#lvl').style.width = `${clamp((db + 50)/50, 0, 1)*100}%`;
     $('#lvl-o').textContent = db < -60 ? '–' : `${db.toFixed(0)} dBFS`;
   }
-  drawStream(); drawDrums(); renderPlayers(); renderLog();
+  drawStream(); drawTrack(); drawDrums(); renderPlayers(); renderLog();
 }
 let last = 0;
 function loop(ts){ if (ts - last > 150){ last = ts; render(); } requestAnimationFrame(loop); }
